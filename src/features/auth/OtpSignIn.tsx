@@ -4,6 +4,7 @@ import { Button } from "../../components/ui/Button";
 import { StatusLabel } from "../../components/ui/StatusLabel";
 import { api } from "../../lib/api";
 import { useAuth, type AuthRole } from "./AuthContext";
+import { useI18n } from "../../lib/i18n";
 
 const ROLE_CARDS: { value: AuthRole; title: string; body: string }[] = [
   {
@@ -43,6 +44,7 @@ const ROLE_HINTS: Record<AuthRole, string> = {
 };
 
 export function OtpSignIn() {
+  const { t } = useI18n();
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const { session, signIn, signOut } = useAuth();
@@ -88,11 +90,10 @@ export function OtpSignIn() {
     return (
       <div className="auth">
         <div className="container-narrow">
-          <p className="eyebrow">Sign up / Sign in</p>
-          <h1 className="h-section">Who are you?</h1>
+          <p className="eyebrow">{t("Sign up / Sign in")}</p>
+          <h1 className="h-section">{t("Who are you?")}</h1>
           <p className="small mt-3" style={{ maxWidth: 480 }}>
-            One account per person. The role you choose determines the surface you can use — a
-            help-seeker is never shown the provider surface and vice versa.
+            {t("One account per person. The role you choose determines the surface you can use — a help-seeker is never shown the provider surface and vice versa.")}
           </p>
           <div className="choice-grid mt-6">
             {ROLE_CARDS.map((c) => (
@@ -102,15 +103,18 @@ export function OtpSignIn() {
                 style={{ cursor: "pointer" }}
                 onClick={() => setRole(c.value)}
               >
-                <span className="h-micro">{c.title}</span>
-                <span className="small mt-2">{c.body}</span>
+                <span className="h-micro">{t(c.title)}</span>
+                <span className="small mt-2">{t(c.body)}</span>
               </label>
             ))}
           </div>
           <p className="small mt-5" style={{ maxWidth: 480 }}>
             {session ? (
               <>
-                Signed in as {session.role.toLowerCase().replace("_", " ")} · {session.phone}.{" "}
+                {t("Signed in as {role} · {phone}.", {
+                  role: t(session.role.toLowerCase().replace("_", " ")),
+                  phone: session.phone,
+                })}{" "}
                 <a
                   href="/auth"
                   onClick={(e) => {
@@ -119,11 +123,11 @@ export function OtpSignIn() {
                   }}
                   style={{ textDecoration: "underline" }}
                 >
-                  Sign out
+                  {t("Sign out")}
                 </a>
               </>
             ) : (
-              "No active session. Choose a role to continue."
+              t("No active session. Choose a role to continue.")
             )}
           </p>
         </div>
@@ -134,16 +138,21 @@ export function OtpSignIn() {
   return (
     <div className="auth">
       <div className="container-narrow">
-        <p className="eyebrow">Sign in — {ROLE_CARDS.find((c) => c.value === role)?.title}</p>
-        <h1 className="h-section">One-time password</h1>
-        <p className="small mt-3" style={{ maxWidth: 480 }}>{ROLE_HINTS[role]}</p>
+        <p className="eyebrow">
+          {t("Sign in — {title}", {
+            title: t(ROLE_CARDS.find((c) => c.value === role)?.title ?? ""),
+          })}
+        </p>
+        <h1 className="h-section">{t("One-time password")}</h1>
+        <p className="small mt-3" style={{ maxWidth: 480 }}>{t(ROLE_HINTS[role])}</p>
 
         {message && (
           <div className="assisted-banner mt-5" role="status">
             <StatusLabel label="ROLE MISMATCH" />
             <span className="small">
-              Signed in as a different role. Please verify as {role.toLowerCase().replace("_", " ")} to
-              continue. You can sign out first if this is not your account.
+              {t("Signed in as a different role. Please verify as {role} to continue. You can sign out first if this is not your account.", {
+                role: t(role.toLowerCase().replace("_", " ")),
+              })}
             </span>
           </div>
         )}
@@ -152,12 +161,15 @@ export function OtpSignIn() {
           <div className="mt-6" role="status">
             <StatusLabel label="SIGNED IN" />
             <p className="small mt-4">
-              Signed in as {session.phone} ({role.toLowerCase().replace("_", " ")}).
+              {t("Signed in as {phone} ({role}).", {
+                phone: session.phone,
+                role: t(role.toLowerCase().replace("_", " ")),
+              })}
             </p>
             <div className="intake-result__actions mt-6">
-              <a href={next ?? DEFAULT_NEXT[role]} className="btn btn--primary">Continue</a>
+              <a href={next ?? DEFAULT_NEXT[role]} className="btn btn--primary">{t("Continue")}</a>
               <button className="btn btn--ghost" onClick={() => { signOut(); setSent(false); setOtp(""); }}>
-                Sign out
+                {t("Sign out")}
               </button>
             </div>
           </div>
@@ -171,13 +183,13 @@ export function OtpSignIn() {
             }}
           >
             <div className="field">
-              <label className="field__label" htmlFor="phone">Phone number</label>
+              <label className="field__label" htmlFor="phone">{t("Phone number")}</label>
               <input
                 id="phone"
                 className="field__input"
                 inputMode="tel"
                 autoComplete="tel"
-                placeholder="10-digit mobile number"
+                placeholder={t("10-digit mobile number")}
                 value={phone}
                 onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
                 disabled={sent}
@@ -186,30 +198,30 @@ export function OtpSignIn() {
 
             {sent && (
               <div className="field mt-4">
-                <label className="field__label" htmlFor="otp">One-time password</label>
+                <label className="field__label" htmlFor="otp">{t("One-time password")}</label>
                 <input
                   id="otp"
                   className="field__input"
                   inputMode="numeric"
                   autoComplete="one-time-code"
-                  placeholder="Enter OTP"
+                  placeholder={t("Enter OTP")}
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
                 />
-                <p className="field__hint">Demo mode: any 4-digit code is accepted.</p>
+                <p className="field__hint">{t("Demo mode: any 4-digit code is accepted.")}</p>
               </div>
             )}
 
-            {error && <p className="field__error mt-4">{error}</p>}
+            {error && <p className="field__error mt-4">{t(error)}</p>}
 
             <div className="mt-6">
               <Button type="submit" block disabled={phone.length < 10 || (sent && otp.length < 4) || sending}>
-                {sent ? "Verify" : "Send OTP"}
+                {sent ? t("Verify") : t("Send OTP")}
               </Button>
             </div>
 
             <button type="button" className="btn btn--ghost mt-4" onClick={() => setRole(null)}>
-              ← Choose a different role
+              {t("← Choose a different role")}
             </button>
           </form>
         )}

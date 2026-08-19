@@ -18,6 +18,7 @@ import type {
 import { CATEGORY_LABELS } from "../../lib/eligibility";
 import { SCHEDULED_LANGUAGES } from "../../lib/languages";
 import { STATES, districtsFor } from "../../lib/regions";
+import { useI18n } from "../../lib/i18n";
 
 const PROVIDER_TYPES: { value: ProviderType; label: string }[] = [
   { value: "ADVOCATE", label: "Advocate" },
@@ -42,6 +43,7 @@ const PATHS: { value: CredentialPath; label: string; hint: string }[] = [
 const PROGRESS = ["Profile", "Practice", "Verification"];
 
 export function ProviderOnboarding() {
+  const { t } = useI18n();
   const [step, setStep] = useState(0);
   const [providerType, setProviderType] = useState<ProviderType | null>(null);
   const [displayName, setDisplayName] = useState("");
@@ -99,29 +101,30 @@ export function ProviderOnboarding() {
   if (result) {
     return (
       <div className="intake-result" role="status">
-        <StatusLabel label={result.tier === "FULLY_VERIFIED" ? "FULLY VERIFIED" : result.tier} />
+        <StatusLabel label={t(result.tier === "FULLY_VERIFIED" ? "FULLY VERIFIED" : result.tier === "DOCUMENT_VERIFIED" ? "DOCUMENT-VERIFIED" : "SELF-DECLARED")} />
         <h1 className="h-section mt-4">
-          {result.tier === "FULLY_VERIFIED" && "Verification complete — FULLY VERIFIED."}
-          {result.tier === "DOCUMENT_VERIFIED" && "Verification complete — DOCUMENT-VERIFIED."}
-          {result.tier === "SELF_DECLARED" && "Profile created — SELF-DECLARED."}
+          {result.tier === "FULLY_VERIFIED" && t("Verification complete — FULLY VERIFIED.")}
+          {result.tier === "DOCUMENT_VERIFIED" && t("Verification complete — DOCUMENT-VERIFIED.")}
+          {result.tier === "SELF_DECLARED" && t("Profile created — SELF-DECLARED.")}
         </h1>
         <ul className="mt-4 verification-reasons">
           {result.checks.map((c) => (
             <li key={c.checkType} className="verification-reason">
-              <span className="h-micro">{LEG_LABELS[c.checkType]}</span>
-              <StatusLabel label={c.result} />
-              <span className="small">{c.sourceLabel}</span>
+              <span className="h-micro">{t(LEG_LABELS[c.checkType])}</span>
+              <StatusLabel label={t(c.result)} />
+              <span className="small">{t(c.sourceLabel)}</span>
             </li>
           ))}
         </ul>
         <p className="small mt-4">
-          Decided {new Date(result.decidedAt).toLocaleString("en-IN")} · verification case {result.caseId}.
-          A stale FULLY VERIFIED degrades to DOCUMENT-VERIFIED automatically when the freshness
-          window passes.
+          {t("Decided {date} · verification case {caseId}. A stale FULLY VERIFIED degrades to DOCUMENT-VERIFIED automatically when the freshness window passes.", {
+            date: new Date(result.decidedAt).toLocaleString("en-IN"),
+            caseId: result.caseId,
+          })}
         </p>
         <div className="mt-6 intake-result__actions">
-          <a href="/provider/dashboard" className="btn btn--primary">Open dashboard</a>
-          <a href="/provider/verification" className="btn btn--outline">Manage verification</a>
+          <a href="/provider/dashboard" className="btn btn--primary">{t("Open dashboard")}</a>
+          <a href="/provider/verification" className="btn btn--outline">{t("Manage verification")}</a>
         </div>
       </div>
     );
@@ -131,23 +134,22 @@ export function ProviderOnboarding() {
     <div className="intake">
       <div className="container-narrow">
         <div className="intake-head">
-          <p className="eyebrow">Provider onboarding</p>
+          <p className="eyebrow">{t("Provider onboarding")}</p>
           <h1 className="h-section">
-            {step === 0 && "Create your professional profile"}
-            {step === 1 && "Practice details"}
-            {step === 2 && "Submit credentials"}
+            {step === 0 && t("Create your professional profile")}
+            {step === 1 && t("Practice details")}
+            {step === 2 && t("Submit credentials")}
           </h1>
           <p className="small mt-3" style={{ maxWidth: 560 }}>
-            The credential rail verifies your identity against issuer-attested sources where
-            available. Source availability is stated honestly — LIVE, DEMO ONLY or OFF.
+            {t("The credential rail verifies your identity against issuer-attested sources where available. Source availability is stated honestly — LIVE, DEMO ONLY or OFF.")}
           </p>
         </div>
 
-        <div className="intake-progress" aria-label={`Step ${step + 1} of 3`}>
+        <div className="intake-progress" aria-label={t("Step {step} of 3", { step: step + 1 })}>
           {PROGRESS.map((label, i) => (
             <div key={label} className={`intake-progress__item ${i <= step ? "is-active" : ""}`}>
               <span className="section-number tabular">{String(i + 1).padStart(2, "0")}</span>
-              <span className="small">{label}</span>
+              <span className="small">{t(label)}</span>
             </div>
           ))}
         </div>
@@ -163,34 +165,34 @@ export function ProviderOnboarding() {
           {step === 0 && (
             <div className="intake-fields">
               <fieldset className="choice-grid">
-                <legend className="sr-only">Provider type</legend>
-                {PROVIDER_TYPES.map((t) => (
-                  <label key={t.value} className={`choice-card ${providerType === t.value ? "is-selected" : ""}`}>
+                <legend className="sr-only">{t("Provider type")}</legend>
+                {PROVIDER_TYPES.map((pt) => (
+                  <label key={pt.value} className={`choice-card ${providerType === pt.value ? "is-selected" : ""}`}>
                     <input
                       type="radio"
                       name="providerType"
-                      value={t.value}
-                      checked={providerType === t.value}
-                      onChange={() => setProviderType(t.value)}
+                      value={pt.value}
+                      checked={providerType === pt.value}
+                      onChange={() => setProviderType(pt.value)}
                     />
-                    <span className="h-micro">{t.label}</span>
+                    <span className="h-micro">{t(pt.label)}</span>
                   </label>
                 ))}
               </fieldset>
 
               <div className="field">
-                <label className="field__label" htmlFor="displayName">Full name</label>
+                <label className="field__label" htmlFor="displayName">{t("Full name")}</label>
                 <input
                   id="displayName"
                   className="field__input"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="As it appears in your credentials"
+                  placeholder={t("As it appears in your credentials")}
                 />
               </div>
 
               <div className="field">
-                <label className="field__label" htmlFor="state">State</label>
+                <label className="field__label" htmlFor="state">{t("State")}</label>
                 <select
                   id="state"
                   className="field__select"
@@ -200,13 +202,13 @@ export function ProviderOnboarding() {
                     setDistrict("");
                   }}
                 >
-                  <option value="">Select state</option>
+                  <option value="">{t("Select state")}</option>
                   {STATES_.map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
 
               <div className="field">
-                <label className="field__label" htmlFor="district">District</label>
+                <label className="field__label" htmlFor="district">{t("District")}</label>
                 <select
                   id="district"
                   className="field__select"
@@ -214,11 +216,11 @@ export function ProviderOnboarding() {
                   onChange={(e) => setDistrict(e.target.value)}
                   disabled={!state}
                 >
-                  <option value="">Select district</option>
+                  <option value="">{t("Select district")}</option>
                   {state && DISTRICTS(state).map((d) => <option key={d} value={d}>{d}</option>)}
                 </select>
                 <p className="field__hint">
-                  {state ? `Districts of ${state}` : "Select a state first"}
+                  {state ? t("Districts of {state}", { state }) : t("Select a state first")}
                 </p>
               </div>
             </div>
@@ -227,7 +229,7 @@ export function ProviderOnboarding() {
           {step === 1 && (
             <div className="intake-fields">
               <div className="field">
-                <label className="field__label">Languages</label>
+                <label className="field__label">{t("Languages")}</label>
                 <div className="checkbox-grid">
                   {LANGUAGES.map((l) => (
                     <label
@@ -245,13 +247,12 @@ export function ProviderOnboarding() {
                   ))}
                 </div>
                 <p className="field__hint">
-                  22 scheduled languages, in their native script. Select every language you can
-                  serve in.
+                  {t("22 scheduled languages, in their native script. Select every language you can serve in.")}
                 </p>
               </div>
 
               <div className="field">
-                <label className="field__label">Service modes</label>
+                <label className="field__label">{t("Service modes")}</label>
                 <div className="checkbox-grid">
                   {(["IN_PERSON", "PHONE", "VIDEO"] as ServiceMode[]).map((m) => (
                     <label key={m} className={`check-chip ${serviceModes.includes(m) ? "is-on" : ""}`}>
@@ -260,23 +261,23 @@ export function ProviderOnboarding() {
                         checked={serviceModes.includes(m)}
                         onChange={() => toggle(serviceModes, m, setServiceModes)}
                       />
-                      {m.replace("_", " ")}
+                      {t(m.replace("_", " "))}
                     </label>
                   ))}
                 </div>
               </div>
 
               <div className="field">
-                <label className="field__label">Services you offer</label>
+                <label className="field__label">{t("Services you offer")}</label>
                 <div className="checkbox-grid">
-                  {(Object.keys(CATEGORY_LABELS) as TaxCategory[]).map((t) => (
-                    <label key={t} className={`check-chip ${taxonomies.includes(t) ? "is-on" : ""}`}>
+                  {(Object.keys(CATEGORY_LABELS) as TaxCategory[]).map((cat) => (
+                    <label key={cat} className={`check-chip ${taxonomies.includes(cat) ? "is-on" : ""}`}>
                       <input
                         type="checkbox"
-                        checked={taxonomies.includes(t)}
-                        onChange={() => toggle(taxonomies, t, setTaxonomies)}
+                        checked={taxonomies.includes(cat)}
+                        onChange={() => toggle(taxonomies, cat, setTaxonomies)}
                       />
-                      {CATEGORY_LABELS[t]}
+                      {t(CATEGORY_LABELS[cat])}
                     </label>
                   ))}
                 </div>
@@ -284,34 +285,33 @@ export function ProviderOnboarding() {
 
               <div className="fee-grid">
                 <div className="field">
-                  <label className="field__label" htmlFor="feeMin">Fee minimum (₹)</label>
+                  <label className="field__label" htmlFor="feeMin">{t("Fee minimum (₹)")}</label>
                   <input id="feeMin" className="field__input" type="number" min={0} value={feeMin} onChange={(e) => setFeeMin(e.target.value)} />
                 </div>
                 <div className="field">
-                  <label className="field__label" htmlFor="feeMax">Fee maximum (₹)</label>
+                  <label className="field__label" htmlFor="feeMax">{t("Fee maximum (₹)")}</label>
                   <input id="feeMax" className="field__input" type="number" min={0} value={feeMax} onChange={(e) => setFeeMax(e.target.value)} />
                 </div>
               </div>
 
               <label className={`check-chip check-chip--wide ${proBono ? "is-on" : ""}`}>
                 <input type="checkbox" checked={proBono} onChange={() => setProBono(!proBono)} />
-                Offer pro bono service (eligible for rotation and service credits)
+                {t("Offer pro bono service (eligible for rotation and service credits)")}
               </label>
               <p className="field__hint">
-                Fees are disclosed before work and honoured. Platform commission: 0%. Third-party
-                payment-processing charges may apply and are disclosed separately.
+                {t("Fees are disclosed before work and honoured. Platform commission: 0%. Third-party payment-processing charges may apply and are disclosed separately.")}
               </p>
             </div>
           )}
 
           {step === 2 && providerType && (
             <div className="intake-fields">
-              <p className="h-micro">Required checks — {providerType.replace("_", " ")}</p>
+              <p className="h-micro">{t("Required checks — {type}", { type: t(providerType.replace("_", " ")) })}</p>
               {sortLegs(REQUIRED_LEGS[providerType]).map((leg) => (
                 <div key={leg} className="credential-leg">
                   <div className="credential-leg__head">
-                    <span className="h-micro">{LEG_LABELS[leg]}</span>
-                    <StatusLabel label={submissions[leg] === "NOT_NOW" || !submissions[leg] ? "OFF" : submissions[leg] === "UPLOAD" ? "DEMO ONLY" : "LIVE"} />
+                    <span className="h-micro">{t(LEG_LABELS[leg])}</span>
+                    <StatusLabel label={t(submissions[leg] === "NOT_NOW" || !submissions[leg] ? "OFF" : submissions[leg] === "UPLOAD" ? "DEMO ONLY" : "LIVE")} />
                   </div>
                   <div className="path-grid">
                     {PATHS.map((p) => (
@@ -322,31 +322,29 @@ export function ProviderOnboarding() {
                           checked={submissions[leg] === p.value}
                           onChange={() => setSubmissions((s) => ({ ...s, [leg]: p.value }))}
                         />
-                        <span className="small">{p.label}</span>
+                        <span className="small">{t(p.label)}</span>
                       </label>
                     ))}
                   </div>
                   <p className="field__hint">
-                    {(PATHS.find((p) => p.value === submissions[leg])?.hint ?? "Select how this leg is verified.")}
+                    {t(PATHS.find((p) => p.value === submissions[leg])?.hint ?? "Select how this leg is verified.")}
                   </p>
                 </div>
               ))}
               <p className="small">
-                Two hard rules: a format check on an enrolment number is never verification, and the
-                system never infers a tier from a pattern. A DEMO ONLY upload can support
-                DOCUMENT-VERIFIED but can never produce FULLY VERIFIED alone.
+                {t("Two hard rules: a format check on an enrolment number is never verification, and the system never infers a tier from a pattern. A DEMO ONLY upload can support DOCUMENT-VERIFIED but can never produce FULLY VERIFIED alone.")}
               </p>
             </div>
           )}
 
-          {error && <p className="field__error mt-4">{error}</p>}
+          {error && <p className="field__error mt-4">{t(error)}</p>}
 
           <div className="intake-nav mt-6">
             {step > 0 && (
-              <button type="button" className="btn btn--ghost" onClick={() => setStep(step - 1)}>← Back</button>
+              <button type="button" className="btn btn--ghost" onClick={() => setStep(step - 1)}>{t("← Back")}</button>
             )}
             <Button type="submit" disabled={!canContinue || submitting}>
-              {step === 2 ? (submitting ? "Verifying…" : "Submit verification") : "Continue"}
+              {step === 2 ? (submitting ? t("Verifying…") : t("Submit verification")) : t("Continue")}
             </Button>
           </div>
         </form>

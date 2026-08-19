@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { HeroSlideshow } from "./HeroSlideshow";
 import { api } from "../../lib/api";
 import type { PublicStat } from "../../lib/types";
+import { useI18n } from "../../lib/i18n";
 
 const PRINCIPLES = [
   {
@@ -63,6 +64,7 @@ const SECTION12_LINE =
   "Scheduled Castes and Scheduled Tribes, women and children, industrial workmen, persons in custody, victims of trafficking, victims of disaster and mass violence, victims of abuse of power, persons with disability, and persons financially disadvantaged. Self-declaration is sufficient to route; the DLSA verifies.";
 
 export function Landing() {
+  const { t } = useI18n();
   const [stats, setStats] = useState<PublicStat[]>([]);
 
   useEffect(() => {
@@ -77,23 +79,25 @@ export function Landing() {
         <div className="hero-content">
           <div className="container">
             <div className="hero-copy">
-              <p className="eyebrow eyebrow--light">Access to justice for all</p>
+              <p className="eyebrow eyebrow--light">{t("Access to justice for all")}</p>
               <h1 className="h-display hero-title">
-                Get the legal help you are <em>entitled</em> to.
+                {t("Get the legal help you are")} <em>{t("entitled")}</em>{" "}
+                {t("to.")}
               </h1>
               <p className="lede hero-lede">
-                Verified professionals, fair allocation and legal aid routed before any payment.
-                No rankings, no ratings, no paid placement.
+                {t(
+                  "Verified professionals, fair allocation and legal aid routed before any payment. No rankings, no ratings, no paid placement.",
+                )}
               </p>
               <div className="hero-cta">
                 <Link to="/start" className="btn btn--light">
-                  I need legal help
+                  {t("I need legal help")}
                 </Link>
                 <Link to="/start?step=eligibility" className="btn btn--light-outline">
-                  Check eligibility
+                  {t("Check eligibility")}
                 </Link>
               </div>
-              <p className="hero-trust">Secure · Private · Confidential</p>
+              <p className="hero-trust">{t("Secure · Private · Confidential")}</p>
             </div>
           </div>
         </div>
@@ -103,20 +107,22 @@ export function Landing() {
         <div className="container">
           <div className="section-head">
             <p className="section-number">01</p>
-            <p className="eyebrow">What this platform is</p>
-            <h2 className="h-section">Not a marketplace. Civic infrastructure for legal help.</h2>
+            <p className="eyebrow">{t("What this platform is")}</p>
+            <h2 className="h-section">
+              {t("Not a marketplace. Civic infrastructure for legal help.")}
+            </h2>
             <p className="small mt-3" style={{ maxWidth: 560 }}>
-              Rule 36 of the BCI Rules prohibits advocates from soliciting work or advertising.
-              This platform therefore has no ratings, no rankings, no "recommended" and no paid
-              placement — it routes citizens fairly and verifies professionals factually.
+              {t(
+                'Rule 36 of the BCI Rules prohibits advocates from soliciting work or advertising. This platform therefore has no ratings, no rankings, no "recommended" and no paid placement — it routes citizens fairly and verifies professionals factually.',
+              )}
             </p>
           </div>
           <div className="grid-12 principles-grid">
             {PRINCIPLES.map((p) => (
               <div key={p.n} className="principle">
                 <p className="section-number">{p.n}</p>
-                <h3 className="h-micro mt-3">{p.title}</h3>
-                <p className="small mt-3">{p.body}</p>
+                <h3 className="h-micro mt-3">{t(p.title)}</h3>
+                <p className="small mt-3">{t(p.body)}</p>
               </div>
             ))}
           </div>
@@ -127,15 +133,15 @@ export function Landing() {
         <div className="container">
           <div className="section-head">
             <p className="section-number">02</p>
-            <p className="eyebrow">The three rails</p>
-            <h2 className="h-section">Everything in the system exists to feed three rails.</h2>
+            <p className="eyebrow">{t("The three rails")}</p>
+            <h2 className="h-section">{t("Everything in the system exists to feed three rails.")}</h2>
           </div>
           <div className="rails-grid mt-7">
             {RAILS.map((r) => (
               <article key={r.title} className="rail">
                 <p className="section-number">{r.n}</p>
-                <h3 className="h-sub mt-3">{r.title}</h3>
-                <p className="small mt-3">{r.body}</p>
+                <h3 className="h-sub mt-3">{t(r.title)}</h3>
+                <p className="small mt-3">{t(r.body)}</p>
               </article>
             ))}
           </div>
@@ -146,17 +152,17 @@ export function Landing() {
         <div className="container-narrow">
           <div className="section-head">
             <p className="section-number">03</p>
-            <p className="eyebrow">How it works</p>
-            <h2 className="h-section">Four steps. One honest route.</h2>
+            <p className="eyebrow">{t("How it works")}</p>
+            <h2 className="h-section">{t("Four steps. One honest route.")}</h2>
           </div>
           <ol className="how-steps mt-7">
-            {STEPS.map(([n, t, b]) => (
+            {STEPS.map(([n, title, body]) => (
               <li key={n} className="how-step">
                 <span className="section-number tabular">{n}</span>
                 <div>
-                  <h3 className="h-micro">{t}</h3>
+                  <h3 className="h-micro">{t(title)}</h3>
                   <p className="small mt-2" style={{ maxWidth: 520 }}>
-                    {b}
+                    {t(body)}
                   </p>
                 </div>
               </li>
@@ -164,7 +170,7 @@ export function Landing() {
           </ol>
           <div className="mt-6">
             <Link to="/start" className="btn btn--primary">
-              Start now — it is free to check
+              {t("Start now — it is free to check")}
             </Link>
           </div>
         </div>
@@ -176,39 +182,39 @@ export function Landing() {
             <div className="rights-main">
               <div className="section-head">
                 <p className="section-number">04</p>
-                <p className="eyebrow">The right to legal help</p>
+                <p className="eyebrow">{t("The right to legal help")}</p>
                 <h2 className="h-section">Section 12, Legal Services Authorities Act 1987</h2>
               </div>
               <p className="lede mt-5" style={{ maxWidth: 560 }}>
-                Free legal services are due to citizens in defined categories: {SECTION12_LINE}
+                {t("Free legal services are due to citizens in defined categories: ")}
+                {t(SECTION12_LINE)}
               </p>
               <p className="small mt-4" style={{ maxWidth: 560 }}>
-                If you declare a Section 12 category, you are routed to the DLSA / Nyaya Bandhu —
-                you will not be charged. This is the single most important flow: a citizen
-                entitled to free representation must never accidentally pay for it.
+                {t(
+                  "If you declare a Section 12 category, you are routed to the DLSA / Nyaya Bandhu — you will not be charged. This is the single most important flow: a citizen entitled to free representation must never accidentally pay for it.",
+                )}
               </p>
               <div className="mt-5">
                 <Link to="/start?step=eligibility" className="btn btn--outline">
-                  Check if you qualify →
+                  {t("Check if you qualify →")}
                 </Link>
               </div>
             </div>
             <div className="rights-side">
               <div className="privilege-card privilege-card--dark">
-                <p className="h-micro">Privilege boundary</p>
+                <p className="h-micro">{t("Privilege boundary")}</p>
                 <p className="small mt-3">
-                  The platform stores metadata about an engagement — who, when, category, status,
-                  fee, CNR pointer — never its content. Attorney–client communications are
-                  protected (s.132, Bharatiya Sakshya Adhiniyam 2023). No case narratives, no
-                  documents, no advice chat.
+                  {t(
+                    "The platform stores metadata about an engagement — who, when, category, status, fee, CNR pointer — never its content. Attorney–client communications are protected (s.132, Bharatiya Sakshya Adhiniyam 2023). No case narratives, no documents, no advice chat.",
+                  )}
                 </p>
               </div>
               <div className="privilege-card privilege-card--dark">
-                <p className="h-micro">Capability honesty</p>
+                <p className="h-micro">{t("Capability honesty")}</p>
                 <p className="small mt-3">
-                  External integrations are labelled LIVE, DEMO ONLY or OFF. A mock source can
-                  demonstrate a flow but can never produce a FULLY VERIFIED outcome. Unavailable
-                  sources cap the achievable tier — they never silently succeed.
+                  {t(
+                    "External integrations are labelled LIVE, DEMO ONLY or OFF. A mock source can demonstrate a flow but can never produce a FULLY VERIFIED outcome. Unavailable sources cap the achievable tier — they never silently succeed.",
+                  )}
                 </p>
               </div>
             </div>
@@ -220,14 +226,14 @@ export function Landing() {
         <div className="container">
           <div className="section-head">
             <p className="section-number">05</p>
-            <p className="eyebrow">Transparency</p>
-            <h2 className="h-section">Terms professionals and citizens can hold us to.</h2>
+            <p className="eyebrow">{t("Transparency")}</p>
+            <h2 className="h-section">{t("Terms professionals and citizens can hold us to.")}</h2>
           </div>
           <div className="transparency-grid mt-7">
             {TRANSPARENCY.map(([k, v]) => (
               <div key={k} className="transparency-item">
-                <p className="h-sub">{k}</p>
-                <p className="small mt-3">{v}</p>
+                <p className="h-sub">{t(k)}</p>
+                <p className="small mt-3">{t(v)}</p>
               </div>
             ))}
           </div>
@@ -239,21 +245,22 @@ export function Landing() {
           <div className="container">
             <div className="section-head">
               <p className="section-number">06</p>
-              <p className="eyebrow">Aggregate statistics</p>
-              <h2 className="h-section">Public reporting, aggregate only.</h2>
+              <p className="eyebrow">{t("Aggregate statistics")}</p>
+              <h2 className="h-section">{t("Public reporting, aggregate only.")}</h2>
               <p className="small mt-3" style={{ maxWidth: 560 }}>
-                Matters served by district, pro bono contribution, median response time and
-                grievance resolution rates. No named individual is rated anywhere.
+                {t(
+                  "Matters served by district, pro bono contribution, median response time and grievance resolution rates. No named individual is rated anywhere.",
+                )}
               </p>
             </div>
             <table className="table table--dense mt-7" style={{ maxWidth: 760 }}>
               <thead>
                 <tr>
-                  <th>District</th>
-                  <th style={{ textAlign: "right" }}>Matters served</th>
-                  <th style={{ textAlign: "right" }}>Pro bono</th>
-                  <th style={{ textAlign: "right" }}>Median response</th>
-                  <th style={{ textAlign: "right" }}>Grievance resolution</th>
+                  <th>{t("District")}</th>
+                  <th style={{ textAlign: "right" }}>{t("Matters served")}</th>
+                  <th style={{ textAlign: "right" }}>{t("Pro bono")}</th>
+                  <th style={{ textAlign: "right" }}>{t("Median response")}</th>
+                  <th style={{ textAlign: "right" }}>{t("Grievance resolution")}</th>
                 </tr>
               </thead>
               <tbody>

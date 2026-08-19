@@ -147,6 +147,19 @@
   color: var(--color-ink);
 }
 
+.header-lang {
+  padding: 4px 10px;
+  border: 1px solid var(--color-hairline);
+  border-radius: 999px;
+  text-transform: none;
+  letter-spacing: var(--tracking-wide);
+  line-height: 1.2;
+}
+
+.header-lang:hover {
+  border-color: var(--color-gray-light);
+}
+
 .header-meta {
   font-size: var(--text-micro);
   letter-spacing: var(--tracking-micro);

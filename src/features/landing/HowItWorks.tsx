@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { SmartImage } from "../../components/ui/SmartImage";
+import { useI18n } from "../../lib/i18n";
 
 const CITIZEN_STEPS = [
   {
@@ -64,18 +65,20 @@ const FAQS = [
 ];
 
 export function HowItWorks() {
+  const { t } = useI18n();
   return (
     <div className="howitworks">
       <section className="page-head">
         <div className="container">
-          <p className="eyebrow">Platform · How it works</p>
-          <h1 className="h-section">How Nayasetu works</h1>
+          <p className="eyebrow">{t("Platform · How it works")}</p>
+          <h1 className="h-section">{t("How Nayasetu works")}</h1>
           <p className="lede mt-3" style={{ maxWidth: 600 }}>
-            Four steps for the citizen, three rails underneath, three possible routes — and only
-            one honest route shown to you at the end.
+            {t(
+              "Four steps for the citizen, three rails underneath, three possible routes — and only one honest route shown to you at the end."
+            )}
           </p>
           <div className="mt-5">
-            <Link to="/start" className="btn btn--primary">Start legal help — it is free to check</Link>
+            <Link to="/start" className="btn btn--primary">{t("Start legal help — it is free to check")}</Link>
           </div>
         </div>
       </section>
@@ -84,21 +87,21 @@ export function HowItWorks() {
         <div className="container-narrow">
           <div className="section-head">
             <p className="section-number">01</p>
-            <p className="eyebrow">The citizen flow</p>
-            <h2 className="h-section">Four steps. One honest route.</h2>
+            <p className="eyebrow">{t("The citizen flow")}</p>
+            <h2 className="h-section">{t("Four steps. One honest route.")}</h2>
           </div>
           <ol className="how-steps mt-7">
             {CITIZEN_STEPS.map((s) => (
               <li key={s.n} className="how-step">
                 <span className="section-number tabular">{s.n}</span>
                 <div>
-                  <h3 className="h-micro">{s.title}</h3>
-                  <p className="small mt-2" style={{ maxWidth: 520 }}>{s.body}</p>
+                  <h3 className="h-micro">{t(s.title)}</h3>
+                  <p className="small mt-2" style={{ maxWidth: 520 }}>{t(s.body)}</p>
                   {s.n === "01" && (
                     <figure className="how-scene">
                       <SmartImage
                         src="/how/need-phone.png"
-                        alt="A citizen's hands holding a smartphone with a form at a kitchen table"
+                        alt={t("A citizen's hands holding a smartphone with a form at a kitchen table")}
                         className="how-scene__img"
                       />
                     </figure>
@@ -107,7 +110,7 @@ export function HowItWorks() {
                     <figure className="how-scene">
                       <SmartImage
                         src="/how/eligibility-form.png"
-                        alt="A hand ticking boxes on a Section 12 eligibility form"
+                        alt={t("A hand ticking boxes on a Section 12 eligibility form")}
                         className="how-scene__img"
                       />
                     </figure>
@@ -116,7 +119,7 @@ export function HowItWorks() {
                     <figure className="how-scene">
                       <SmartImage
                         src="/how/fork-road.png"
-                        alt="A village road forking in two at golden hour"
+                        alt={t("A village road forking in two at golden hour")}
                         className="how-scene__img"
                       />
                     </figure>
@@ -125,7 +128,7 @@ export function HowItWorks() {
                     <figure className="how-scene">
                       <SmartImage
                         src="/how/work-transparent.png"
-                        alt="Work begins transparently — choose a professional, see a full quote before any payment, and pay through an authorized payment provider"
+                        alt={t("Work begins transparently — choose a professional, see a full quote before any payment, and pay through an authorized payment provider")}
                         className="how-scene__img"
                       />
                     </figure>
@@ -141,24 +144,25 @@ export function HowItWorks() {
         <div className="container">
           <div className="section-head">
             <p className="section-number">02</p>
-            <p className="eyebrow">The three routes</p>
-            <h2 className="h-section">Exactly one route is shown to you.</h2>
+            <p className="eyebrow">{t("The three routes")}</p>
+            <h2 className="h-section">{t("Exactly one route is shown to you.")}</h2>
             <p className="small mt-3" style={{ maxWidth: 560 }}>
-              The eligibility router decides before any paid flow. A citizen entitled to free
-              representation must never accidentally pay for it.
+              {t(
+                "The eligibility router decides before any paid flow. A citizen entitled to free representation must never accidentally pay for it."
+              )}
             </p>
           </div>
           <div className="rails-grid mt-7">
             {ROUTES.map((r) => (
               <article key={r.name} className="rail">
-                <p className="section-number">{r.tag}</p>
-                <h3 className="h-sub mt-3">{r.name}</h3>
-                <p className="small mt-3">{r.body}</p>
+                <p className="section-number">{t(r.tag)}</p>
+                <h3 className="h-sub mt-3">{t(r.name)}</h3>
+                <p className="small mt-3">{t(r.body)}</p>
               </article>
             ))}
           </div>
           <div className="mt-6">
-            <Link to="/start" className="btn btn--outline">Check which route applies to you →</Link>
+            <Link to="/start" className="btn btn--outline">{t("Check which route applies to you →")}</Link>
           </div>
         </div>
       </section>
@@ -167,14 +171,14 @@ export function HowItWorks() {
         <div className="container">
           <div className="section-head">
             <p className="section-number">03</p>
-            <p className="eyebrow">Allocation</p>
-            <h2 className="h-section">Fair allocation is a design constraint, not a feature.</h2>
+            <p className="eyebrow">{t("Allocation")}</p>
+            <h2 className="h-section">{t("Fair allocation is a design constraint, not a feature.")}</h2>
           </div>
           <div className="transparency-grid mt-7">
             {ALLOCATION.map(([k, v]) => (
               <div key={k} className="transparency-item">
-                <p className="h-sub">{k}</p>
-                <p className="small mt-3">{v}</p>
+                <p className="h-sub">{t(k)}</p>
+                <p className="small mt-3">{t(v)}</p>
               </div>
             ))}
           </div>
@@ -185,20 +189,20 @@ export function HowItWorks() {
         <div className="container-narrow">
           <div className="section-head">
             <p className="section-number">04</p>
-            <p className="eyebrow">After routing</p>
-            <h2 className="h-section">What happens once you are routed.</h2>
+            <p className="eyebrow">{t("After routing")}</p>
+            <h2 className="h-section">{t("What happens once you are routed.")}</h2>
           </div>
           <div className="transparency-grid mt-7">
             {AFTER_ROUTING.map(([k, v]) => (
               <div key={k} className="transparency-item">
-                <p className="h-sub">{k}</p>
-                <p className="small mt-3">{v}</p>
+                <p className="h-sub">{t(k)}</p>
+                <p className="small mt-3">{t(v)}</p>
               </div>
             ))}
           </div>
           <SmartImage
             src="/how/how-desk.png"
-            alt="A hand signing a fee disclosure document"
+            alt={t("A hand signing a fee disclosure document")}
             className="slot-banner slot-banner--3x2 mt-6"
           />
         </div>
@@ -208,21 +212,21 @@ export function HowItWorks() {
         <div className="container-narrow">
           <div className="section-head">
             <p className="section-number">05</p>
-            <p className="eyebrow">Questions</p>
-            <h2 className="h-section">Frequently asked questions</h2>
+            <p className="eyebrow">{t("Questions")}</p>
+            <h2 className="h-section">{t("Frequently asked questions")}</h2>
           </div>
           <div className="mt-6">
             {FAQS.map(([q, a]) => (
               <div key={q} className="credential-leg">
                 <div className="credential-leg__head">
-                  <span className="h-micro">{q}</span>
+                  <span className="h-micro">{t(q)}</span>
                 </div>
-                <p className="small mt-3">{a}</p>
+                <p className="small mt-3">{t(a)}</p>
               </div>
             ))}
           </div>
           <div className="mt-7">
-            <Link to="/rights" className="btn btn--outline">Read your legal rights →</Link>
+            <Link to="/rights" className="btn btn--outline">{t("Read your legal rights →")}</Link>
           </div>
         </div>
       </section>

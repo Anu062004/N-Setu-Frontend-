@@ -1,3 +1,5 @@
+import { useI18n } from "../../lib/i18n";
+
 type Tone = "neutral" | "blue" | "green" | "amber" | "red";
 
 const TONES: Record<string, Tone> = {
@@ -39,19 +41,21 @@ export function toneFor(label: string): Tone {
 }
 
 export function StatusLabel({ label, className = "" }: { label: string; className?: string }) {
+  const { t } = useI18n();
   const tone = toneFor(label);
   return (
     <span className={`status status--${tone} ${className}`} role="status">
-      {label}
+      {t(label)}
     </span>
   );
 }
 
 export function TierLabel({ tier }: { tier: string }) {
+  const { t } = useI18n();
   const map: Record<string, string> = {
-    SELF_DECLARED: "SELF-DECLARED",
-    DOCUMENT_VERIFIED: "DOCUMENT-VERIFIED",
-    FULLY_VERIFIED: "FULLY VERIFIED",
+    SELF_DECLARED: t("SELF-DECLARED"),
+    DOCUMENT_VERIFIED: t("DOCUMENT-VERIFIED"),
+    FULLY_VERIFIED: t("FULLY VERIFIED"),
   };
   return <StatusLabel label={map[tier] ?? tier} />;
 }

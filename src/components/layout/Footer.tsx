@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useI18n } from "../../lib/i18n";
 
 const COLUMNS: { title: string; links: { label: string; to: string }[] }[] = [
   {
@@ -33,43 +34,46 @@ const COLUMNS: { title: string; links: { label: string; to: string }[] }[] = [
 ];
 
 export function Footer() {
+  const { t } = useI18n();
+
   return (
     <footer className="site-footer">
       <div className="container">
         <div className="grid-12 footer-grid">
           <div className="footer-brand" style={{ gridColumn: "span 4" }}>
-            <Link to="/" className="header-brand" aria-label="Nayasetu — home">
+            <Link to="/" className="header-brand" aria-label={t("Nayasetu — home")}>
               <img src="/brand/logo.png" alt="" className="header-brand__logo" />
               <span className="header-brand__name">Nayasetu</span>
             </Link>
             <p className="small mt-3" style={{ maxWidth: 280 }}>
-              Verified professionals, fair allocation, transparent process and institutional
-              accountability. Not a lawyer marketplace.
+              {t(
+                "Verified professionals, fair allocation, transparent process and institutional accountability. Not a lawyer marketplace."
+              )}
             </p>
           </div>
           {COLUMNS.map((c) => (
             <div key={c.title} style={{ gridColumn: "span 2" }}>
-              <p className="h-micro">{c.title}</p>
+              <p className="h-micro">{t(c.title)}</p>
               <ul className="footer-links">
                 {c.links.map((l) => (
                   <li key={l.label}>
-                    <Link to={l.to}>{l.label}</Link>
+                    <Link to={l.to}>{t(l.label)}</Link>
                   </li>
                 ))}
               </ul>
             </div>
           ))}
           <div style={{ gridColumn: "span 2" }}>
-            <p className="h-micro">Trust</p>
+            <p className="h-micro">{t("Trust")}</p>
             <ul className="footer-links">
               <li>
-                <Link to="/rights">Secure · Private · Confidential</Link>
+                <Link to="/rights">{t("Secure · Private · Confidential")}</Link>
               </li>
               <li>
-                <Link to="/how-it-works">Privilege boundary</Link>
+                <Link to="/how-it-works">{t("Privilege boundary")}</Link>
               </li>
               <li>
-                <Link to="/admin">Capability status</Link>
+                <Link to="/admin">{t("Capability status")}</Link>
               </li>
             </ul>
           </div>
@@ -77,8 +81,9 @@ export function Footer() {
         <hr className="rule mt-6" />
         <div className="footer-bottom">
           <p className="small">
-            Nayasetu is not affiliated with any court, bar council or government body. Professional
-            misconduct is a State Bar Council matter under s.35, Advocates Act 1961.
+            {t(
+              "Nayasetu is not affiliated with any court, bar council or government body. Professional misconduct is a State Bar Council matter under s.35, Advocates Act 1961."
+            )}
           </p>
         </div>
       </div>

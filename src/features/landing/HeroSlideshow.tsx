@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { SmartImage } from "../../components/ui/SmartImage";
+import { useI18n } from "../../lib/i18n";
 
 const SLIDES = [
   {
@@ -19,6 +20,7 @@ const SLIDES = [
 const INTERVAL_MS = 5000;
 
 export function HeroSlideshow() {
+  const { t } = useI18n();
   const [loaded, setLoaded] = useState<Record<number, boolean>>({});
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -68,7 +70,7 @@ export function HeroSlideshow() {
           >
             <SmartImage
               src={s.src}
-              alt={s.alt}
+              alt={t(s.alt)}
               eager
               onMissing={() => setLoaded((l) => ({ ...l, [i]: false }))}
             />
@@ -79,19 +81,22 @@ export function HeroSlideshow() {
       <div className="hero-slideshow__controls">
         <span
           className="hero-slideshow__counter tabular"
-          aria-label={`Slide ${visible.indexOf(index) + 1} of ${visible.length}`}
+          aria-label={t("Slide {x} of {y}", {
+            x: visible.indexOf(index) + 1,
+            y: visible.length,
+          })}
         >
           {String(visible.indexOf(index) + 1).padStart(2, "0")} /{" "}
           {String(visible.length).padStart(2, "0")}
         </span>
-        <div className="hero-slideshow__progress" role="tablist" aria-label="Slideshow slides">
+        <div className="hero-slideshow__progress" role="tablist" aria-label={t("Slideshow slides")}>
           {SLIDES.map((s, i) =>
             loaded[i] === false ? null : (
               <button
                 key={s.src}
                 role="tab"
                 aria-selected={i === index}
-                aria-label={`Show slide ${i + 1}`}
+                aria-label={t("Show slide {n}", { n: i + 1 })}
                 className={`hero-progress ${i === index ? "hero-progress--active" : ""}`}
                 onClick={() => jump(i)}
               >
@@ -105,10 +110,10 @@ export function HeroSlideshow() {
           )}
         </div>
         <div className="hero-slideshow__arrows">
-          <button className="hero-arrow" onClick={() => go(-1)} aria-label="Previous slide">
+          <button className="hero-arrow" onClick={() => go(-1)} aria-label={t("Previous slide")}>
             ←
           </button>
-          <button className="hero-arrow" onClick={() => go(1)} aria-label="Next slide">
+          <button className="hero-arrow" onClick={() => go(1)} aria-label={t("Next slide")}>
             →
           </button>
         </div>

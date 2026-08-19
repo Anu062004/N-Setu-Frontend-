@@ -12,6 +12,7 @@ import { StatusLabel, TierLabel } from "../../components/ui/StatusLabel";
 import { Button } from "../../components/ui/Button";
 import { formatINR, formatDate, formatTime } from "../../lib/format";
 import { CURRENT_PROVIDER } from "../../lib/seed";
+import { useI18n } from "../../lib/i18n";
 
 const REDEMPTIONS = [
   ["SERVICE_RECORD_EXPORT", "Signed export of your verified service events"],
@@ -21,6 +22,7 @@ const REDEMPTIONS = [
 ] as const;
 
 export function ProviderDashboard() {
+  const { t } = useI18n();
   const [verification, setVerification] = useState<ProviderVerification | null>(null);
   const [ledger, setLedger] = useState<LedgerSummary | null>(null);
   const [appointments, setAppointments] = useState<ProviderAppointment[]>([]);
@@ -28,7 +30,7 @@ export function ProviderDashboard() {
   const [grievances, setGrievances] = useState<Grievance[]>([]);
   const [slots, setSlots] = useState<Slot[]>([]);
   const [newSlot, setNewSlot] = useState("");
-  const [redeemed, setRedeemed] = useState<string | null>(null);
+  const [redeemed, setRedeemed] = useState<{ id: string; type: string } | null>(null);
 
   const load = () => {
     api.getProviderVerification(CURRENT_PROVIDER).then(setVerification);
@@ -48,7 +50,7 @@ export function ProviderDashboard() {
 
   const handleRedeem = async (type: string) => {
     const r = await api.redeem(CURRENT_PROVIDER, type);
-    setRedeemed(`${r.redemptionId} · ${type} generated — evidence artefact, not an official decision.`);
+    setRedeemed({ id: r.redemptionId, type });
   };
 
   const handleAddSlot = async () => {
@@ -63,21 +65,21 @@ export function ProviderDashboard() {
       <div className="container">
         <div className="flex-between">
           <div>
-            <p className="eyebrow">Provider surface · Adv. Sunita Kumari</p>
-            <h1 className="h-section">Dashboard</h1>
+            <p className="eyebrow">{t("Provider surface")} · Adv. Sunita Kumari</p>
+            <h1 className="h-section">{t("Dashboard")}</h1>
           </div>
           <div className="flex-between" style={{ gap: "var(--sp-3)" }}>
-            <TierLabel tier={verification?.tier ?? "SELF_DECLARED"} />
-            <a href="/provider/verification" className="btn btn--outline btn--sm">Verification</a>
+            <TierLabel tier={t(verification?.tier === "FULLY_VERIFIED" ? "FULLY VERIFIED" : verification?.tier === "DOCUMENT_VERIFIED" ? "DOCUMENT-VERIFIED" : "SELF-DECLARED")} />
+            <a href="/provider/verification" className="btn btn--outline btn--sm">{t("Verification")}</a>
           </div>
         </div>
 
         {stale && (
           <div className="assisted-banner mt-5" role="status">
-            <StatusLabel label="REVERIFICATION DUE" />
+            <StatusLabel label={t("REVERIFICATION DUE")} />
             <span className="small">
-              Freshness window passed — tier has degraded to DOCUMENT-VERIFIED.{" "}
-              <a href="/provider/verification" style={{ textDecoration: "underline" }}>Re-verify now</a>.
+              {t("Freshness window passed — tier has degraded to DOCUMENT-VERIFIED.")}{" "}
+              <a href="/provider/verification" style={{ textDecoration: "underline" }}>{t("Re-verify now")}</a>.
             </span>
           </div>
         )}
@@ -85,73 +87,75 @@ export function ProviderDashboard() {
         <div className="grid-12 mt-6">
           <div className="dash-col" style={{ gridColumn: "span 7" }}>
             <div className="dash-section">
-              <h2 className="h-micro">Verification</h2>
+              <h2 className="h-micro">{t("Verification")}</h2>
               {verification && (
                 <>
                   <div className="flex-between mt-4">
-                    <TierLabel tier={verification.tier} />
-                    <StatusLabel label={stale ? "STALE" : "CURRENT"} />
+                    <TierLabel tier={t(verification.tier === "FULLY_VERIFIED" ? "FULLY VERIFIED" : verification.tier === "DOCUMENT_VERIFIED" ? "DOCUMENT-VERIFIED" : "SELF-DECLARED")} />
+                    <StatusLabel label={t(stale ? "STALE" : "CURRENT")} />
                   </div>
                   <table className="table table--dense mt-4">
                     <thead>
                       <tr>
-                        <th>Check</th>
-                        <th>Result</th>
-                        <th>Mode</th>
+                        <th>{t("Check")}</th>
+                        <th>{t("Result")}</th>
+                        <th>{t("Mode")}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {verification.checks.map((c) => (
                         <tr key={c.checkType}>
-                          <td className="small">{c.checkType}</td>
-                          <td><StatusLabel label={c.result} /></td>
+                          <td className="small">{t(c.checkType)}</td>
+                          <td><StatusLabel label={t(c.result)} /></td>
                           <td>
-                            <StatusLabel label={c.sourceMode === "MOCK" ? "DEMO ONLY" : c.sourceMode} />
+                            <StatusLabel label={t(c.sourceMode === "MOCK" ? "DEMO ONLY" : c.sourceMode)} />
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                   <p className="small mt-3">
-                    Decided {formatDate(verification.decidedAt)} · freshness{" "}
-                    {verification.freshnessWindowDays} days.
+                    {t("Decided {date} · freshness {days} days.", {
+                      date: formatDate(verification.decidedAt),
+                      days: verification.freshnessWindowDays,
+                    })}
                   </p>
                 </>
               )}
             </div>
 
             <div className="dash-section">
-              <h2 className="h-micro">Service credit ledger</h2>
+              <h2 className="h-micro">{t("Service credit ledger")}</h2>
               {ledger && (
                 <>
                   <div className="flex-between mt-4">
                     <div>
-                      <p className="meta">Total credits</p>
+                      <p className="meta">{t("Total credits")}</p>
                       <p className="h-sub tabular">{ledger.totalCredits}</p>
                     </div>
                     <div>
-                      <p className="meta">Period credits (Aug)</p>
+                      <p className="meta">{t("Period credits (Aug)")}</p>
                       <p className="h-sub tabular">{ledger.periodCredits}</p>
                     </div>
                     <div>
-                      <p className="meta">Ledger</p>
-                      <StatusLabel label="APPEND-ONLY" />
+                      <p className="meta">{t("Ledger")}</p>
+                      <StatusLabel label={t("APPEND-ONLY")} />
                     </div>
                   </div>
                   <table className="table table--dense mt-4">
                     <thead>
                       <tr>
-                        <th>Date</th>
-                        <th>Event</th>
-                        <th>Reference</th>
-                        <th style={{ textAlign: "right" }}>Credits</th>
+                        <th>{t("Date")}</th>
+                        <th>{t("Event")}</th>
+                        <th>{t("Reference")}</th>
+                        <th style={{ textAlign: "right" }}>{t("Credits")}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {ledger.events.map((e) => (
                         <tr key={e.id}>
                           <td className="small tabular">{formatDate(e.occurredAt)}</td>
-                          <td className="small">{e.eventType.replaceAll("_", " ")}</td>
+                          <td className="small">{t(e.eventType.replaceAll("_", " "))}</td>
                           <td className="small">{e.reference}</td>
                           <td className="small tabular" style={{ textAlign: "right" }}>
                             +{e.credits}
@@ -161,45 +165,44 @@ export function ProviderDashboard() {
                     </tbody>
                   </table>
                   <p className="small mt-3">
-                    Hash-chained, append-only. Credits are private to you and institutional
-                    consumers — never shown to citizens, never purchasable.
+                    {t("Hash-chained, append-only. Credits are private to you and institutional consumers — never shown to citizens, never purchasable.")}
                   </p>
                 </>
               )}
             </div>
 
             <div className="dash-section">
-              <h2 className="h-micro">Availability</h2>
+              <h2 className="h-micro">{t("Availability")}</h2>
               <div className="availability-add mt-4">
                 <input
                   className="field__input"
                   type="datetime-local"
                   value={newSlot}
                   onChange={(e) => setNewSlot(e.target.value)}
-                  aria-label="Add a slot"
+                  aria-label={t("Add a slot")}
                 />
                 <Button size="sm" variant="ghost" onClick={() => void handleAddSlot()} disabled={!newSlot}>
-                  Add slot
+                  {t("Add slot")}
                 </Button>
               </div>
               <ul className="slot-list mt-4">
                 {slots.map((s) => (
                   <li key={s.id} className="slot-item" style={{ cursor: "default" }}>
                     <span className="small tabular">{formatDate(s.startsAt)} · {formatTime(s.startsAt)}</span>
-                    <StatusLabel label={s.available ? "AVAILABLE" : "BOOKED"} />
+                    <StatusLabel label={t(s.available ? "AVAILABLE" : "BOOKED")} />
                   </li>
                 ))}
               </ul>
             </div>
 
             <div className="dash-section">
-              <h2 className="h-micro">Quotes / payment status</h2>
+              <h2 className="h-micro">{t("Quotes / payment status")}</h2>
               <table className="table table--dense mt-4">
                 <thead>
                   <tr>
-                    <th>Booking</th>
-                    <th style={{ textAlign: "right" }}>Amount</th>
-                    <th>State</th>
+                    <th>{t("Booking")}</th>
+                    <th style={{ textAlign: "right" }}>{t("Amount")}</th>
+                    <th>{t("State")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -207,85 +210,82 @@ export function ProviderDashboard() {
                     <tr key={p.bookingId}>
                       <td className="small tabular">{p.bookingId}</td>
                       <td className="small tabular" style={{ textAlign: "right" }}>
-                        {p.amount === 0 ? "s.12 / pro bono" : formatINR(p.amount)}
+                        {p.amount === 0 ? t("s.12 / pro bono") : formatINR(p.amount)}
                       </td>
-                      <td><StatusLabel label={p.state} /></td>
+                      <td><StatusLabel label={t(p.state)} /></td>
                     </tr>
                   ))}
                 </tbody>
               </table>
               <p className="small mt-3">
-                Payments move through an authorized PSP. Only a verified PSP webhook or
-                server-side status check moves payment state — never a frontend callback.
+                {t("Payments move through an authorized PSP. Only a verified PSP webhook or server-side status check moves payment state — never a frontend callback.")}
               </p>
             </div>
           </div>
 
           <div className="dash-col" style={{ gridColumn: "span 5" }}>
             <div className="dash-section">
-              <h2 className="h-micro">Appointments</h2>
+              <h2 className="h-micro">{t("Appointments")}</h2>
               <ul className="grievance-list mt-4">
                 {appointments.map((a) => (
                   <li key={a.id} className="grievance-item">
                     <div className="flex-between">
                       <span className="small tabular">{formatDate(a.startsAt)} · {formatTime(a.startsAt)}</span>
-                      <StatusLabel label={a.state} />
+                      <StatusLabel label={t(a.state)} />
                     </div>
-                    <p className="small mt-3">{a.citizenLabel} · {a.category}</p>
+                    <p className="small mt-3">{a.citizenLabel} · {t(a.category)}</p>
                   </li>
                 ))}
               </ul>
             </div>
 
             <div className="dash-section">
-              <h2 className="h-micro">Redemptions</h2>
+              <h2 className="h-micro">{t("Redemptions")}</h2>
               <ul className="redemption-list mt-4">
                 {REDEMPTIONS.map(([type, desc]) => (
                   <li key={type} className="redemption-item">
                     <div>
-                      <p className="h-micro">{type.replaceAll("_", " ")}</p>
-                      <p className="small mt-2">{desc}</p>
+                      <p className="h-micro">{t(type.replaceAll("_", " "))}</p>
+                      <p className="small mt-2">{t(desc)}</p>
                     </div>
                     <Button size="sm" variant="ghost" onClick={() => void handleRedeem(type)}>
-                      Export
+                      {t("Export")}
                     </Button>
                   </li>
                 ))}
               </ul>
               {redeemed && (
-                <p className="small mt-4" role="status">{redeemed}</p>
+                <p className="small mt-4" role="status">
+                  {redeemed.id} · {t("{type} generated — evidence artefact, not an official decision.", { type: redeemed.type })}
+                </p>
               )}
               <p className="small mt-4">
-                Evidence packets support applications you make to statutory bodies — the platform
-                does not decide eligibility and does not self-issue recognition.
+                {t("Evidence packets support applications you make to statutory bodies — the platform does not decide eligibility and does not self-issue recognition.")}
               </p>
             </div>
 
             <div className="dash-section">
-              <h2 className="h-micro">Grievances</h2>
+              <h2 className="h-micro">{t("Grievances")}</h2>
               <ul className="grievance-list mt-4">
                 {grievances.map((g) => (
                   <li key={g.id} className="grievance-item">
                     <div className="flex-between">
                       <span className="small tabular">{g.id}</span>
-                      <StatusLabel label={g.status} />
+                      <StatusLabel label={t(g.status)} />
                     </div>
-                    <p className="small mt-3">{g.summary}</p>
+                    <p className="small mt-3">{t(g.summary)}</p>
                   </li>
                 ))}
               </ul>
               <p className="small mt-4">
-                Conduct signals are objective, platform-observable facts — response time, no-show,
-                quote honoured. They feed rotation duty accounting and grievance thresholds; they
-                are never shown to citizens.
+                {t("Conduct signals are objective, platform-observable facts — response time, no-show, quote honoured. They feed rotation duty accounting and grievance thresholds; they are never shown to citizens.")}
               </p>
             </div>
           </div>
         </div>
 
         <p className="small mt-6" style={{ color: "var(--color-gray-light)" }}>
-          0% platform commission. Third-party payment-processing charges may apply and are
-          disclosed separately.
+          {t("0% platform commission. Third-party payment-processing charges may apply and are disclosed separately.")}
         </p>
       </div>
     </div>

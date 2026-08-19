@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { PublicShell } from "./components/layout/PublicShell";
 import { AuthProvider } from "./features/auth/AuthContext";
+import { LanguageProvider, useI18n } from "./lib/i18n";
 import { RequireRole } from "./features/auth/RequireRole";
 import { Landing } from "./features/landing/Landing";
 import { HowItWorks } from "./features/landing/HowItWorks";
@@ -24,11 +25,12 @@ import { Grievance } from "./features/citizen/Grievance";
 import { CitizenPortal } from "./features/citizen/CitizenPortal";
 
 function SimplePage({ eyebrow, title, body }: { eyebrow: string; title: string; body: string }) {
+  const { t } = useI18n();
   return (
     <div className="container-narrow mt-8" style={{ minHeight: "40vh" }}>
-      <p className="eyebrow">{eyebrow}</p>
-      <h1 className="h-section mt-3">{title}</h1>
-      <p className="small mt-4" style={{ maxWidth: 560 }}>{body}</p>
+      <p className="eyebrow">{t(eyebrow)}</p>
+      <h1 className="h-section mt-3">{t(title)}</h1>
+      <p className="small mt-4" style={{ maxWidth: 560 }}>{t(body)}</p>
     </div>
   );
 }
@@ -43,8 +45,9 @@ function IntakeRoute() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
+    <LanguageProvider>
+      <AuthProvider>
+        <BrowserRouter>
         <Routes>
           <Route element={<PublicShell />}>
             <Route path="/" element={<Landing />} />
@@ -93,7 +96,8 @@ export default function App() {
             />
           </Route>
         </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+        </BrowserRouter>
+      </AuthProvider>
+    </LanguageProvider>
   );
 }

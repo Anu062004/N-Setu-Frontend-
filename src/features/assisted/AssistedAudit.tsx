@@ -4,8 +4,10 @@ import { api } from "../../lib/api";
 import type { AssistedAuditEvent } from "../../lib/types";
 import { StatusLabel } from "../../components/ui/StatusLabel";
 import { formatTime, formatDate } from "../../lib/format";
+import { useI18n } from "../../lib/i18n";
 
 export function AssistedAudit() {
+  const { t } = useI18n();
   const [events, setEvents] = useState<AssistedAuditEvent[]>([]);
 
   useEffect(() => {
@@ -15,34 +17,34 @@ export function AssistedAudit() {
   return (
     <div className="assisted-audit">
       <div className="container-narrow">
-        <p className="eyebrow">Assisted mode · audit log</p>
-        <h1 className="h-section">Session audit log</h1>
+        <p className="eyebrow">{t("Assisted mode · audit log")}</p>
+        <h1 className="h-section">{t("Session audit log")}</h1>
         <p className="small mt-3" style={{ maxWidth: 580 }}>
-          Every action in a delegated session is recorded against both principals — the operator
-          and the citizen — under the recorded consent reference. The operator is never the
-          citizen.
+          {t(
+            "Every action in a delegated session is recorded against both principals — the operator and the citizen — under the recorded consent reference. The operator is never the citizen."
+          )}
         </p>
 
         <div className="assisted-banner mt-5" role="status">
-          <StatusLabel label="SESSION sess_0938" />
-          <span className="small">Citizen #8842 · Consent c_0938 · 17:00–18:00</span>
+          <StatusLabel label={t("SESSION sess_0938")} />
+          <span className="small">{t("Citizen #8842 · Consent c_0938 · 17:00–18:00")}</span>
         </div>
 
         <table className="table table--dense mt-6">
           <thead>
             <tr>
-              <th>Time</th>
-              <th>Actor</th>
-              <th>Action</th>
-              <th>Consent</th>
+              <th>{t("Time")}</th>
+              <th>{t("Actor")}</th>
+              <th>{t("Action")}</th>
+              <th>{t("Consent")}</th>
             </tr>
           </thead>
           <tbody>
             {events.map((e) => (
               <tr key={e.id}>
                 <td className="small tabular">{formatDate(e.occurredAt)} · {formatTime(e.occurredAt)}</td>
-                <td className="small">{e.actor}</td>
-                <td className="small">{e.action}</td>
+                <td className="small">{t(e.actor)}</td>
+                <td className="small">{t(e.action)}</td>
                 <td className="small tabular">{e.consentRef}</td>
               </tr>
             ))}
@@ -50,12 +52,13 @@ export function AssistedAudit() {
         </table>
 
         <p className="small mt-4" style={{ maxWidth: 580 }}>
-          The audit log is append-only. Every write carries both principals into the record, so
-          assisted action is always attributable and never confused with citizen self-service.
+          {t(
+            "The audit log is append-only. Every write carries both principals into the record, so assisted action is always attributable and never confused with citizen self-service."
+          )}
         </p>
 
         <div className="mt-6">
-          <Link to="/assist" className="btn btn--outline">← Back to assisted mode</Link>
+          <Link to="/assist" className="btn btn--outline">{t("← Back to assisted mode")}</Link>
         </div>
       </div>
     </div>
