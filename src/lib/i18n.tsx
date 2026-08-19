@@ -29,13 +29,17 @@ function fill(template: string, vars?: Record<string, string | number>): string 
   );
 }
 
+let currentLocale: Locale = initialLocale();
+
 /**
  * Translate an English source string to the current locale's dictionary.
- * Keys are the English strings themselves; unknown keys fall back to English.
+ * Keys are the English strings themselves; in English mode the source key is
+ * returned unchanged. Unknown keys fall back to English in any locale.
  * `{placeholder}` tokens are preserved and filled from `vars`.
  */
 export function translate(key: string, vars?: Record<string, string | number>): string {
-  return fill(HI[key] ?? key, vars);
+  const out = currentLocale === "en" ? key : (HI[key] ?? key);
+  return fill(out, vars);
 }
 
 interface I18nValue {
@@ -49,6 +53,8 @@ const I18nContext = createContext<I18nValue | null>(null);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>(initialLocale);
+
+  currentLocale = locale;
 
   useEffect(() => {
     document.documentElement.lang = locale;
