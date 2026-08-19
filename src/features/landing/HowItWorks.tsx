@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
 import { SmartImage } from "../../components/ui/SmartImage";
+
+const DEMO_VIDEO_URL = "https://www.youtube.com/watch?v=YOUR_DEMO_VIDEO_ID";
 import { useI18n } from "../../lib/i18n";
 
 const CITIZEN_STEPS = [
@@ -90,7 +92,17 @@ export function HowItWorks() {
             <p className="eyebrow">{t("The citizen flow")}</p>
             <h2 className="h-section">{t("Four steps. One honest route.")}</h2>
           </div>
-          <ol className="how-steps mt-7">
+          <div className="how-demo mt-5">
+            <a
+              className="btn btn--outline"
+              href={DEMO_VIDEO_URL}
+              target="_blank"
+              rel="noreferrer"
+            >
+              {t("Watch the product demo")} →
+            </a>
+          </div>
+          <ol className="how-steps mt-5">
             {CITIZEN_STEPS.map((s) => (
               <li key={s.n} className="how-step">
                 <span className="section-number tabular">{s.n}</span>

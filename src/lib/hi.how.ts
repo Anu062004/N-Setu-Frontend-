@@ -6,6 +6,7 @@ export const HI_HOW: Record<string, string> = {
   "Start legal help — it is free to check":
     "कानूनी सहायता शुरू करें — जाँच निःशुल्क है",
   "The citizen flow": "नागरिक प्रवाह",
+  "Watch the product demo": "उत्पाद डेमो देखें",
   "Four steps. One honest route.": "चार कदम। एक ईमानदार मार्ग।",
   "A citizen's hands holding a smartphone with a form at a kitchen table":
     "एक नागरिक के हाथ रसोई की मेज़ पर फ़ॉर्म वाला स्मार्टफ़ोन पकड़े हुए",
