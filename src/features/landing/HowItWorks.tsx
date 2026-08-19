@@ -87,7 +87,7 @@ export function HowItWorks() {
       </section>
 
       <section className="how">
-        <div className="container-narrow">
+        <div className="container">
           <div className="section-head">
             <p className="section-number">01</p>
             <p className="eyebrow">{t("The citizen flow")}</p>
@@ -108,7 +108,7 @@ export function HowItWorks() {
                 <span className="section-number tabular">{s.n}</span>
                 <div>
                   <h3 className="h-micro">{t(s.title)}</h3>
-                  <p className="small mt-2" style={{ maxWidth: 520 }}>{t(s.body)}</p>
+                  <p className="small mt-2">{t(s.body)}</p>
                   {s.n === "01" && (
                     <figure className="how-scene">
                       <SmartImage
