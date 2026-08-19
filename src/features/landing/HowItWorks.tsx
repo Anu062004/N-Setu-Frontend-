@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { SmartImage } from "../../components/ui/SmartImage";
 
-const DEMO_VIDEO_URL = "https://www.youtube.com/watch?v=YOUR_DEMO_VIDEO_ID";
+const DEMO_VIDEO_URL =
+  "https://www.youtube.com/watch?v=A_z5g0_hJN8&list=RDA_z5g0_hJN8&start_radio=1";
 import { useI18n } from "../../lib/i18n";
 
 const CITIZEN_STEPS = [
@@ -92,17 +93,16 @@ export function HowItWorks() {
             <p className="eyebrow">{t("The citizen flow")}</p>
             <h2 className="h-section">{t("Four steps. One honest route.")}</h2>
           </div>
-          <div className="how-demo mt-5">
-            <a
-              className="btn btn--outline"
-              href={DEMO_VIDEO_URL}
-              target="_blank"
-              rel="noreferrer"
-            >
-              {t("Watch the product demo")} →
-            </a>
-          </div>
-          <ol className="how-steps mt-5">
+          <div className="how-panel mt-6">
+            <div className="how-panel__intro">
+              <h3 className="h-sub">{t("The four steps, at a glance")}</h3>
+              <p className="small mt-2">
+                {t(
+                  "Every citizen journey follows the same four steps. After the steps, watch a short demo of the whole product.",
+                )}
+              </p>
+            </div>
+            <ol className="how-steps mt-5">
             {CITIZEN_STEPS.map((s) => (
               <li key={s.n} className="how-step">
                 <span className="section-number tabular">{s.n}</span>
@@ -149,6 +149,30 @@ export function HowItWorks() {
               </li>
             ))}
           </ol>
+          </div>
+
+          <div className="demo-card mt-6">
+            <a className="demo-card__cover" href={DEMO_VIDEO_URL} target="_blank" rel="noreferrer" aria-label={t("Watch the product demo")}>
+              <img
+                src="https://img.youtube.com/vi/A_z5g0_hJN8/hqdefault.jpg"
+                alt={t("Product demo video cover")}
+                className="demo-card__img"
+              />
+              <span className="demo-card__play" aria-hidden="true"><span className="demo-card__play-icon">▶</span></span>
+            </a>
+            <div className="demo-card__body">
+              <p className="eyebrow">{t("Product demo")}</p>
+              <h3 className="h-sub mt-2">{t("Watch the product demo")}</h3>
+              <p className="small mt-3">
+                {t(
+                  "See the full journey in about two minutes — how a citizen is checked for legal aid, routed, and connected to a verified professional.",
+                )}
+              </p>
+              <a className="btn btn--primary mt-4" href={DEMO_VIDEO_URL} target="_blank" rel="noreferrer">
+                {t("Watch on YouTube")} →
+              </a>
+            </div>
+          </div>
         </div>
       </section>
 

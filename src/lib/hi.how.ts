@@ -7,6 +7,14 @@ export const HI_HOW: Record<string, string> = {
     "कानूनी सहायता शुरू करें — जाँच निःशुल्क है",
   "The citizen flow": "नागरिक प्रवाह",
   "Watch the product demo": "उत्पाद डेमो देखें",
+  "Product demo": "उत्पाद डेमो",
+  "Product demo video cover": "उत्पाद डेमो वीडियो कवर",
+  "Watch on YouTube": "YouTube पर देखें",
+  "The four steps, at a glance": "चार चरण, एक नज़र में",
+  "Every citizen journey follows the same four steps. After the steps, watch a short demo of the whole product.":
+    "हर नागरिक का सफ़र इन्हीं चार चरणों से होकर गुज़रता है। चरणों के बाद, पूरे उत्पाद का छोटा डेमो देखें।",
+  "See the full journey in about two minutes — how a citizen is checked for legal aid, routed, and connected to a verified professional.":
+    "लगभग दो मिनट में पूरा सफ़र देखें — कैसे एक नागरिक की विधिक सहायता के लिए जाँच होती है, उसे रूट किया जाता है, और एक सत्यापित पेशेवर से जोड़ा जाता है।",
   "Four steps. One honest route.": "चार कदम। एक ईमानदार मार्ग।",
   "A citizen's hands holding a smartphone with a form at a kitchen table":
     "एक नागरिक के हाथ रसोई की मेज़ पर फ़ॉर्म वाला स्मार्टफ़ोन पकड़े हुए",
