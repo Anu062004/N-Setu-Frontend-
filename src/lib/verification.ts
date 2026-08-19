@@ -1,4 +1,5 @@
 import type { CredentialLeg, ProviderType, VerificationCheck, VerificationTier } from "./types";
+import { translate } from "./i18n";
 
 export const REQUIRED_LEGS: Record<ProviderType, CredentialLeg[]> = {
   ADVOCATE: ["IDENTITY", "DEGREE", "ENROLMENT", "PRACTICE_CERT", "CURRENCY"],
@@ -62,7 +63,9 @@ export function decideTier(
   });
   if (failing.length > 0) {
     reasons.push(
-      `Required check failed: ${failing.map((f) => LEG_LABELS[f]).join(", ")}. A conflicting or not-found result cannot be verified.`,
+      translate("Required check failed: {legs}. A conflicting or not-found result cannot be verified.", {
+        legs: failing.map((f) => translate(LEG_LABELS[f])).join(", "),
+      }),
     );
     return { tier: "SELF_DECLARED", reasons, canUpgrade: true };
   }
@@ -73,7 +76,9 @@ export function decideTier(
   });
   if (unavailable.length > 0) {
     reasons.push(
-      `Source unavailable for: ${unavailable.map((u) => LEG_LABELS[u]).join(", ")}. UNAVAILABLE never becomes PASS — the achievable tier is capped.`,
+      translate("Source unavailable for: {legs}. UNAVAILABLE never becomes PASS — the achievable tier is capped.", {
+        legs: unavailable.map((u) => translate(LEG_LABELS[u])).join(", "),
+      }),
     );
   }
 

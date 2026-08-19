@@ -152,4 +152,9 @@ export const HI_PROVIDER2: Record<string, string> = {
   "Run reverification": "पुनः सत्यापन चलाएँ",
   "Re-runs each check against its configured source. UNAVAILABLE sources cap the tier — they never grant one.":
     "प्रत्येक जाँच अपने कॉन्फ़िगर किए गए स्रोत के विरुद्ध फिर से चलाई जाती है। UNAVAILABLE स्रोत स्तर को सीमित करते हैं — वे कभी स्तर प्रदान नहीं करते।",
+  REVIEW_REQUIRED: "समीक्षा आवश्यक",
+  "Required check failed: {legs}. A conflicting or not-found result cannot be verified.":
+    "आवश्यक जाँच विफल रही: {legs}। विरोधाभासी या न-मिला परिणाम सत्यापित नहीं किया जा सकता।",
+  "Source unavailable for: {legs}. UNAVAILABLE never becomes PASS — the achievable tier is capped.":
+    "इनके लिए स्रोत अनुपलब्ध: {legs}। UNAVAILABLE कभी PASS नहीं बनता — प्राप्त किया जा सकने वाला स्तर सीमित है।",
 };
