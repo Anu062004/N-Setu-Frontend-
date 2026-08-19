@@ -526,15 +526,19 @@
   border-radius: 8px;
 }
 
-@media (max-width: 1000px) {
+@media (max-width: 900px) {
   .how-steps {
-    grid-template-columns: repeat(2, 1fr);
+    gap: var(--sp-4);
+  }
+
+  .how-step {
+    padding: var(--sp-4);
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 560px) {
   .how-steps {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
