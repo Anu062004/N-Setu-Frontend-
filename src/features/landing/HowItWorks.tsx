@@ -121,6 +121,15 @@ export function HowItWorks() {
                       />
                     </figure>
                   )}
+                  {s.n === "04" && (
+                    <figure className="how-scene">
+                      <SmartImage
+                        src="/how/work-transparent.png"
+                        alt="Work begins transparently — choose a professional, see a full quote before any payment, and pay through an authorized payment provider"
+                        className="how-scene__img"
+                      />
+                    </figure>
+                  )}
                 </div>
               </li>
             ))}
