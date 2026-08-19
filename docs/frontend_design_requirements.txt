@@ -1,0 +1,430 @@
+--- PAGE 1 ---
+Frontend Design & Implementation Report · Backend Architecture v2.1
+1
+FRONTEND DESIGN &
+IMPLEMENTATION REPORT
+Legal Service Delivery Platform · Backend Architecture v2.1 → Frontend Specification · Refined
+Swiss / International Typographic Style
+Purpose. Translate the supplied Backend Architecture v2.1 into a production-oriented frontend brief: information
+architecture, role-based screens, flows, design rules, API mapping, states, imagery direction, and ready-to-use
+image-generation prompts.
+Source boundary. Backend Architecture v2.1 is treated as the source of truth. Visual choices not
+specified by the backend are explicitly frontend recommendations.
+1. PRODUCT THESIS
+This is not a lawyer marketplace. The architecture removes weighted ranking, star ratings, win-ratio rewards, public
+portfolios, case narratives and client ratings. The three core rails are credential verification, service incentives, and
+accountability. fileciteturn5file0L17-L38
+The frontend should therefore communicate access to justice, verified professionals, fair allocation, transparent
+process and institutional accountability — never popularity or competitive lawyer shopping.
+2. NON-NEGOTIABLE FRONTEND RULES
+Backend constraint
+Frontend requirement
+No ranking / ratings
+Never show stars, scores, ranks, “best lawyer”, “recommended”, “top match”, paid placement, win rate
+or comparative quality claims. Citizen-facing DTOs explicitly reject these concepts.
+fileciteturn5file0L531-L567
+Mode A: citizen choice
+Show hard-filtered, fairly rotated results; explain filters, not why one provider is better. The citizen
+chooses. fileciteturn5file0L290-L317
+Mode B: duty rotation
+For legal-aid, pro-bono and assisted requests, present assignment as duty rotation, not recommendation
+or merit. fileciteturn5file0L319-L346
+Eligibility before payment
+Run the Section 12 / affordability routing before paid booking. Routes are legal-aid referral, pro-bono
+rotation or paid directory. fileciteturn5file0L464-L476
+Verification honesty
+Distinguish LIVE, MOCK/DEMO ONLY and OFF. Mock data cannot create FULLY VERIFIED; unavailable
+sources must not silently become success. fileciteturn5file0L279-L289
+Privilege boundary
+Do not build case narratives, advice chat, evidence repositories or case-document storage. Matter data is
+metadata only. fileciteturn5file0L502-L518
+Credits are private
+No public leaderboard, gold advocate badge or citizen-visible credit balance. Credits belong to
+provider/institutional surfaces. fileciteturn5file0L408-L417
+Payment boundary
+Payment is handled by an authorized PSP; never imply the platform holds money or has its own
+wallet/escrow. fileciteturn5file0L430-L449
+Case-status fallback
+If no authorized integration exists, show explicit LINK REQUIRED / UNAVAILABLE; never invent or scrape
+status. fileciteturn5file0L519-L530
+3. DESIGN LANGUAGE — REFINED CIVIC SWISS
+Style: Swiss / International Typographic Style with a premium civic-infrastructure finish.
+
+Grid: 12-column desktop grid; precise shared left edges; consistent spacing tokens; hairline dividers.
+
+Typography: one high-quality grotesk/sans family. Large black headings + restrained body copy. Typography does
+most of the visual work.
+
+Palette: solid white/warm-white, near-black, cool gray and one restrained civic blue. Green only for factual
+verified/success states; amber/red for warnings/errors.
+
+--- PAGE 2 ---
+Frontend Design & Implementation Report · Backend Architecture v2.1
+2
+
+Visuals: one strong documentary/architectural photograph where useful. Keep image and text locked to the same
+grid.
+
+Premium details: micro-labels, section numbering, exact baselines, subtle rules, precise status marks and
+generous whitespace.
+
+Avoid: gradients, glassmorphism, neon colors, excessive rounded cards, decorative blobs, stock-photo lawyer
+smiles, gamification and dashboard clutter.
+4. NAMING CONSTRAINT
+Do not use “NyayaSetu” in the frontend. The supplied architecture says that name is retired because the
+Department of Justice operates a public-facing Nyaya Setu AI legal assistant, and the product/repository should
+remain neutral until naming is finalized. fileciteturn5file0L11-L16
+For mockups, use neutral temporary copy such as LEGAL ACCESS PLATFORM or ACCESS TO JUSTICE
+until the final brand name is locked.
+5. INFORMATION ARCHITECTURE
+Surface
+Core screens
+Density
+Citizen / public
+Home · How it works · Rights · Start legal help · Intake · Eligibility · Available professionals ·
+Profile · Slots · Quote/PSP handoff · Booking · Referral · Grievance
+Low–medium
+CSC / VLE assisted
+Operator login · Consent/delegation · Citizen intake · Eligibility · Assigned help · Booking ·
+Session close · Audit/consent
+Medium
+Provider
+Dashboard · Profile · Verification · Availability · Matters metadata · Appointments · Payments
+· Credits · Redemptions · Grievances
+Medium–high
+Institution
+Overview · Provider records · Rosters · Rotation · Grievances/referrals · Aggregate statistics ·
+Evidence/exports
+High
+Admin
+Capability flags · Verification/review · Adapter status · Audit · Exceptions
+High
+These surfaces directly reflect the backend's public, provider, institutional, admin and delegated-operator surfaces.
+fileciteturn5file0L57-L104
+6. HOMEPAGE / HERO
+Goal: make the product feel like modern civic infrastructure, not a marketplace.
+
+Eyebrow: ACCESS TO JUSTICE FOR ALL
+
+Headline: Get the legal help you are entitled to.
+
+Short explanation about verified professionals and appropriate legal-aid/pro-bono routes.
+
+Primary CTA: I need legal help; secondary CTA: Check eligibility.
+
+Small trust line: Secure · Private · Confidential.
+
+One Supreme Court / civic-architecture image aligned to the right side of the grid.
+
+Four quiet principles: For Citizens · Verified Professionals · For Institutions · Transparent & Accountable.
+Do not place lawyer rankings, testimonials, star ratings, “top lawyers”, promotional profiles or
+marketplace search above the fold.
+7. CITIZEN INTAKE → ELIGIBILITY
+The backend identifies this as the most important flow: a citizen entitled to free representation must not accidentally
+pay. fileciteturn5file0L464-L476
+Step
+UI
+01 Your problem
+Property · Family · Employment · Consumer · Criminal · Other. Plain-language descriptions.
+02 About you
+Minimal structured information. Avoid privileged narrative.
+03 Eligibility
+Affordability + relevant self-declared Section 12 inputs + fee ceiling where needed.
+
+--- PAGE 3 ---
+Frontend Design & Implementation Report · Backend Architecture v2.1
+3
+Step
+UI
+04 Get help
+Show exactly one route: legal-aid referral, pro-bono rotation, or paid directory. Explain why the route exists.
+The architecture targets 22 scheduled languages, with static translated taxonomy/notification/IVR content rather
+than model-generated legal category names. fileciteturn5file0L478-L481
+8. DIRECTORY / ALLOCATION UI
+Mode A: hard filters only — provider type, taxonomy, district, language, service mode, fee ceiling and minimum tier.
+Ordering is rotated and replayable. fileciteturn5file0L290-L317
+Provider row: Name · provider type · languages · district · fee range · next slot · factual verification tier · View profile.
+Avoid stars, scores, rank numbers, “best match”, “recommended”, popularity, win rate or paid
+placement.
+Mode B: show “Assigned through duty rotation” with the assignment, provider, appointment and next action. Do not
+make it look like the citizen chose or the system recommended the person. fileciteturn5file0L319-L330
+9. PROFESSIONAL PROFILE + VERIFICATION
+Show
+Do not show
+Name, provider type, district/state, languages, service modes,
+services, fee range, availability, verification tier
+Stars, rankings, win rate, testimonials, case victories, public
+portfolio, blog, promotional claims
+Factual verification status / freshness where available
+Internal conduct score or grievance details
+Booking and availability actions
+Comparative “better than” language
+Verification tiers are SELF-DECLARED, DOCUMENT-VERIFIED and FULLY VERIFIED; stale fully verified status can
+degrade to document-verified. fileciteturn5file0L251-L263
+10. PROVIDER DASHBOARD
+
+Verification / reverification due
+
+Active matters metadata and upcoming appointments
+
+Availability / slots
+
+Service credit summary + append-only ledger
+
+Quotes / payment-provider status
+
+Grievances and permitted conduct-related actions
+
+Redemptions: service record, panel-application evidence, recognition evidence, CLE activity record
+Credits are earned from service events such as pro-bono closure, legal-aid service, underserved-block service,
+rotation duty, response SLA, CLE and Lok Adalat settlement. The ledger is append-only and hash-chained.
+fileciteturn5file0L347-L406
+11. INSTITUTIONAL DASHBOARD
+Use a dense Swiss data-interface treatment. Public-facing statistics are aggregate only; individual conduct signals
+remain institution-facing. fileciteturn5file0L482-L501
+
+Matters served by district
+
+Pro-bono contribution
+
+Median response time by category
+
+Grievance resolution rates
+
+Scoped provider records
+
+Roster and rotation state
+
+Referral / evidence packets
+
+Audit trail
+
+--- PAGE 4 ---
+Frontend Design & Implementation Report · Backend Architecture v2.1
+4
+12. CSC / VLE ASSISTED MODE
+CSC/VLE is a first-class human actor. The operator acts for a citizen through a recorded delegated session and
+consent window; audit records both principals. fileciteturn5file0L77-L79 fileciteturn5file0L450-L463
+Recommended persistent banner: ASSISTED SESSION · Acting for [Citizen] · Consent recorded ·
+Expires [time]. Make it impossible to confuse operator identity with citizen identity.
+13. PAYMENT UI
+Show a transparent quote before work: amount, currency, fee breakdown, expiry and PSP. UI states: Quote ready →
+Payment initiated → Awaiting provider confirmation → Paid/settled → Failed → Offline acknowledgement. The
+backend does not self-custody funds. fileciteturn5file0L430-L449
+Only verified PSP webhook/server-side status can move the payment to a final paid/settled state; a
+forged frontend callback must not do it. fileciteturn5file0L703-L713
+14. MATTER / CASE UI
+Show metadata only: who, when, category, status, fee, CNR pointer, opened/closed timestamps and close reason.
+No case narrative, advice chat, evidence, documents or correspondence. fileciteturn5file0L165-L169
+fileciteturn5file0L502-L518
+15. GRIEVANCE UI
+Neutral lifecycle: OPEN → TRIAGED → PLATFORM RESOLVED / REFERRED TO BAR COUNCIL / REFERRED TO DLSA. The
+platform packages evidence and tracks outcome; it does not publish a public verdict or reputation score.
+fileciteturn5file0L489-L497
+16. API → UI MAP
+Backend endpoint
+Frontend
+/auth/otp/request, /verify
+OTP sign-in
+/auth/delegation
+CSC/VLE assisted session
+/providers + verification
+Provider onboarding/profile/verification
+/needs
+Citizen intake + eligibility
+/needs/:id/directory
+Filtered rotated directory
+/needs/:id/select
+Citizen selection confirmation
+/needs/:id/rotate
+Duty-rotation assignment
+/needs/:id/referral
+Legal-aid referral
+/providers/:id/slots
+Availability
+/bookings/*
+Booking lifecycle
+/matters/*
+Matter metadata + case-status fallback
+/me/credits, /me/redemptions
+Provider ledger/redemption
+/me/service-record, /me/panel-evidence
+Evidence/export
+/payments/*
+Quote + PSP handoff/status
+/grievances
+Grievance submission/tracking
+/institutional/*
+Institutional records/rosters
+/public/stats
+Aggregate public statistics
+Endpoint set derived from the architecture's API surface. fileciteturn5file0L531-L567
+17. COMPONENT / DESIGN SYSTEM
+
+--- PAGE 5 ---
+Frontend Design & Implementation Report · Backend Architecture v2.1
+5
+Component
+Direction
+Buttons
+Black/navy primary; outlined secondary; direct verbs; modest radius.
+Status
+Small factual labels: VERIFIED, CURRENT, PENDING, DEMO ONLY, OFF, LINK REQUIRED, CONFIRMED,
+FAILED.
+Cards
+Use selectively. Prefer rows, sections and dividers for dense data.
+Tables
+Precise columns, compact headers, strong alignment, hairline separators.
+Forms
+Large labels, helper copy, obvious errors, progressive disclosure, keyboard support.
+Icons
+One consistent line-icon family; monochrome.
+Charts
+Minimal axes/direct labels; no 3D or decorative chart styling.
+Photography
+Documentary architecture/people; avoid generic corporate-lawyer stock imagery.
+18. ACCESSIBILITY / TRUST
+
+Target WCAG 2.2 AA as a frontend quality goal.
+
+Never communicate status by color alone.
+
+Readable body text and generous line height.
+
+Keyboard navigation + visible focus.
+
+Multilingual-ready labels and content.
+
+LIVE/MOCK/OFF and LINK_REQUIRED must be explicit.
+
+Assisted mode always shows acting-for and consent state.
+
+Sensitive actions need confirmation and clear success/failure messages.
+19. SUPREME COURT / ARCHITECTURAL IMAGERY
+The Supreme Court of India can work as a strong editorial anchor because the product concerns access to justice.
+Treat it as contextual architecture, not endorsement. Do not add official-looking seals, government marks, or
+language implying the Supreme Court operates or endorses the platform unless such a relationship actually exists.
+For production, prefer properly sourced/licensed/official imagery when rights or attribution matter. AI-generated
+architecture is ideal for prototypes and design exploration. Keep the image subordinate to typography and grid.
+20. READY-TO-USE IMAGE GENERATION PROMPTS
+Homepage hero — Supreme Court
+Create a production-quality 1440×1024 desktop web hero for a premium Indian access-to-justice platform. Strict Swiss International
+Typographic Style: modular 12-column grid, precise alignment, large black grotesk sans-serif typography, white/off-white solid
+background, monochrome interface, thin 1px rules, almost no shadows, no gradients, no decorative blobs. Use one realistic documentary
+color photograph of the Supreme Court of India building aligned cleanly to the right side of the grid. Left side: small uppercase eyebrow
+“ACCESS TO JUSTICE FOR ALL”, large headline “The legal help you are entitled to.”, short factual paragraph, primary black button “I need
+legal help”, secondary outlined button “Check eligibility”, and small line “Secure · Private · Confidential”. Premium, institutional, calm,
+credible. No lawyer rankings, stars, testimonials, marketplace language, fake government seal, product logo, gradients or glassmorphism.
+Citizen intake — eligibility
+Create a production-quality 1440×1024 desktop citizen intake screen for an Indian legal-access platform in strict Swiss International
+Typographic Style. White solid background, black grotesk typography, 12-column grid, generous whitespace, hairline dividers, minimal
+monochrome line icons, one restrained civic-blue accent. Four-step progress: 01 Your problem / 02 About you / 03 Eligibility / 04 Get help.
+Main heading “What do you need help with?” Six choices: Property, Family, Employment, Consumer, Criminal, Other. Right-side eligibility
+panel: “Can you afford a lawyer?” with three radio choices and plain-language explanations. Primary CTA “Continue”. Add a small note
+that eligibility is checked before paid booking. No decorative illustrations, gradients, card nesting or marketplace UI.
+Citizen directory — fair rotation
+Create a production-quality 1440×1024 legal professional directory screen. Strict Swiss grid and typography: white background, black
+text, fine rules, restrained blue accent, no gradients or glassmorphism. Heading “Available legal professionals”. Explain that results are
+filtered by legal need, district, language, service mode, fee ceiling and verification level. Use clean horizontal provider rows, not
+promotional cards. Each row: name, provider type, years of practice, languages, district, fee range, next slot, factual verification tier, and
+“View profile”. Add subtle label “Ordering: Rotated fairly” and “14 eligible professionals”. Never use stars, scores, ranks, “best match”,
+
+--- PAGE 6 ---
+Frontend Design & Implementation Report · Backend Architecture v2.1
+6
+recommendations, popularity, win rate or paid placement. The citizen chooses.
+Provider verification dashboard
+Create a premium 1440×1024 provider dashboard for a legal services platform. Strict Swiss / International Typographic Style, data-dense
+but elegant. White content area, near-black sidebar, thin borders, restrained blue and green status accents. Header “Dashboard”.
+Verification module: Identity — Verified, Enrolment — Verified, Practice — Verified, Currency — Current, Overall — FULLY VERIFIED. Add
+capability labels LIVE / DEMO ONLY / OFF where appropriate. Include appointments, active matters, availability and service-credit
+summary. Credits must feel institutional, not gamified: no leaderboard, public badge or gold/silver advocate. Precise tables, compact
+metadata, generous spacing.
+Service-credit ledger
+Create a premium 1440×1024 provider/institutional ledger screen for a legal access platform. Pure Swiss information design: white
+background, black typography, thin rules, exact column alignment, restrained green/blue accents, minimal charting. Title “Service Credit
+Ledger”. Show total credits, period credits and append-only event table with Date, Matter / Activity, Credits, Type, Reference, Evidence.
+Include Pro Bono Matter Closed, Legal Aid Tier Matter Closed, Rotation Duty Completed, First Response SLA Met, CLE Module Completed,
+Lok Adalat Settlement. Add minimal monthly bar chart with direct labels. Redemption area: Service Record Export, Panel Application
+Evidence Packet, Recognition Eligibility Packet, CLE Activity Record. Note: “Evidence packet — not an official institutional decision.” No
+coins, trophies, blockchain visuals or leaderboards.
+Institutional command center
+Create a premium 1440×1024 institutional dashboard for DLSA / Bar Council / Department-level users. Swiss International Typographic
+Style: white, charcoal, cool gray, one restrained civic-blue accent, thin rules, strong grid, compact readable tables. Aggregate statistics
+only: matters served by district, pro-bono contribution, median response time by category, grievance resolution rate. Add roster/duty
+rotation state, grievance/referral queue, scoped provider records and evidence/export actions. No individual public ratings or rankings. No
+flashy analytics, gradients, 3D charts or gamification.
+Supreme Court editorial section
+Create a premium 1440×900 editorial website section for an Indian access-to-justice platform, strict Swiss print-inspired web design. Use
+one realistic documentary color photograph of the Supreme Court of India building, aligned to a modular grid. Rest is typography on an
+off-white solid background: small uppercase label “THE RIGHT TO LEGAL HELP”, large black sans-serif heading “Justice should not depend
+on knowing where to start.”, short factual paragraph and text link “Understand your rights →”. Fine black rules, generous whitespace,
+asymmetric but mathematically aligned columns. No gradients, decorative shapes, fake seals, government branding or endorsement
+claims.
+21. BUILD ORDER
+Phase
+Frontend deliverables
+P0
+Tokens, typography, grid, navigation, accessibility primitives, status system, OTP, citizen intake, eligibility
+routing.
+P1
+Mode A directory, provider profile, slots, booking, quote/PSP handoff, referral/fallback states.
+P2
+Provider verification, dashboard, availability, matter metadata, service-credit ledger and redemptions.
+P3
+CSC/VLE delegated sessions, institutional dashboard, rosters, grievances, aggregate public stats.
+P4
+Capability/admin views, audit, export/referral workflows and production integration polish.
+This mirrors the backend implementation order: identity/delegation → credentials → intake/eligibility → allocation →
+scheduling → ledger/redemption → payments → conduct/institutional API. fileciteturn5file0L568-L609
+22. FRONTEND QA CHECKLIST
+
+No citizen screen contains score, rank, rating, recommendation, top-match or public credit fields.
+
+Section 12-eligible users cannot accidentally reach paid booking.
+
+Mode A communicates citizen choice; Mode B communicates duty rotation.
+
+FULLY VERIFIED is shown only when the backend actually returns that tier.
+
+MOCK is visibly DEMO ONLY; it never looks like official verification.
+
+Matter screens contain metadata only.
+
+Payment UI reflects PSP state and never suggests platform custody.
+
+Unavailable case status shows LINK REQUIRED / UNAVAILABLE.
+
+Assisted mode persistently shows acting-for + consent.
+
+--- PAGE 7 ---
+Frontend Design & Implementation Report · Backend Architecture v2.1
+7
+
+Provider credits remain private to provider/institutional surfaces.
+
+All core flows are responsive, keyboard accessible and multilingual-ready.
+23. MASTER PROMPT FOR A FRONTEND GENERATOR
+Build a premium civic-tech legal service platform frontend from Backend Architecture v2.1. Treat the
+backend as the source of truth. This is not a lawyer marketplace. Communicate verified professional
+identity, fair access, transparent routing, service accountability and institutional trust. Use a refined
+Swiss / International Typographic Style: modular 12-column grid, typography-led hierarchy, solid
+white/off-white surfaces, near-black text, one restrained civic-blue accent, hairline rules, minimal
+shadows, no gradients, no glassmorphism and no visual clutter. Use purposeful documentary
+architecture photography, including Supreme Court of India imagery for editorial/hero sections when
+appropriate, but never imply official endorsement or generate fake seals. Implement distinct citizen,
+CSC/VLE assisted, provider, institutional and admin surfaces. Citizen flow: intake → eligibility →
+legal-aid/pro-bono/paid route before payment. Mode A: filtered rotated set, citizen chooses. Mode B:
+duty rotation. Never show ratings, rankings, recommendations, match scores, public credit badges,
+portfolios, win ratios or case narratives. Verification: SELF-DECLARED, DOCUMENT-VERIFIED, FULLY
+VERIFIED plus LIVE, DEMO ONLY/MOCK and OFF capability states. Provider dashboards may show
+service credits and evidence redemptions; citizen surfaces may not. Matter screens are
+metadata-only. Payment uses an authorized PSP; never imply platform custody. Case-status
+unavailable states show an official-link fallback. Make every important state explicit, accessible,
+multilingual-ready and audit-friendly.
+24. SOURCE NOTE
+Primary source reviewed in full: Backend Architecture v2.1 — Supply-Side Rails for Legal Service Delivery, 19 pages.
+Requirements above are grounded in its design thesis, system context, module map, schema, credential rules,
+allocation rules, ledger/incentive rules, payment boundary, assisted-access model, privilege boundary, API surface,
+build order, capability flags and acceptance tests. fileciteturn5file0L11-L38 fileciteturn5file0L80-L104
+fileciteturn5file0L687-L717

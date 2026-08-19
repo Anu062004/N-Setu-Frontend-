@@ -1,0 +1,219 @@
+import { useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { Button } from "../../components/ui/Button";
+import { StatusLabel } from "../../components/ui/StatusLabel";
+import { api } from "../../lib/api";
+import { useAuth, type AuthRole } from "./AuthContext";
+
+const ROLE_CARDS: { value: AuthRole; title: string; body: string }[] = [
+  {
+    value: "CITIZEN",
+    title: "I need legal help",
+    body: "Sign in to continue your legal need, view your referral or pro bono assignment, and track your matter.",
+  },
+  {
+    value: "PROVIDER",
+    title: "I am a legal professional",
+    body: "Sign in to create your professional profile, submit credentials for verification and manage your dashboard.",
+  },
+  {
+    value: "OPERATOR",
+    title: "I operate a CSC / VLE",
+    body: "Sign in to open a delegated assisted session for a citizen, with recorded consent.",
+  },
+  {
+    value: "INSTITUTION",
+    title: "Institution (DLSA / Bar Council / DoJ)",
+    body: "Sign in to access scoped institutional surfaces — rosters, aggregate statistics and grievance pipeline.",
+  },
+];
+
+const DEFAULT_NEXT: Record<AuthRole, string> = {
+  CITIZEN: "/start",
+  PROVIDER: "/provider/onboarding",
+  OPERATOR: "/assist",
+  INSTITUTION: "/institutional",
+};
+
+const ROLE_HINTS: Record<AuthRole, string> = {
+  CITIZEN: "One-time password to your phone. No password to remember.",
+  PROVIDER: "OTP verifies your phone. Your professional identity is then verified separately through the credential rail — a phone number is never a professional credential.",
+  OPERATOR: "Every assisted action is recorded against both you and the citizen, under a recorded consent reference.",
+  INSTITUTION: "Scoped, read-mostly access. Aggregate statistics only for public surfaces.",
+};
+
+export function OtpSignIn() {
+  const [params] = useSearchParams();
+  const navigate = useNavigate();
+  const { session, signIn, signOut } = useAuth();
+
+  const requestedRole = (params.get("role") as AuthRole | null) ?? null;
+  const next = params.get("next") ?? null;
+  const message = params.get("message") ?? null;
+
+  const [role, setRole] = useState<AuthRole | null>(requestedRole);
+  const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState("");
+  const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleRequest = async () => {
+    if (phone.length < 10) return;
+    setSending(true);
+    setError(null);
+    try {
+      await api.requestOtp(phone);
+      setSent(true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to send OTP");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleVerify = async () => {
+    if (otp.length < 4 || !role) return;
+    setError(null);
+    try {
+      const verified = await api.verifyOtp(phone, otp);
+      signIn({ userId: verified.userId, phone, role, token: verified.token });
+      navigate(next ?? DEFAULT_NEXT[role], { replace: true });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Invalid OTP");
+    }
+  };
+
+  if (role === null) {
+    return (
+      <div className="auth">
+        <div className="container-narrow">
+          <p className="eyebrow">Sign up / Sign in</p>
+          <h1 className="h-section">Who are you?</h1>
+          <p className="small mt-3" style={{ maxWidth: 480 }}>
+            One account per person. The role you choose determines the surface you can use — a
+            help-seeker is never shown the provider surface and vice versa.
+          </p>
+          <div className="choice-grid mt-6">
+            {ROLE_CARDS.map((c) => (
+              <label
+                key={c.value}
+                className="choice-card"
+                style={{ cursor: "pointer" }}
+                onClick={() => setRole(c.value)}
+              >
+                <span className="h-micro">{c.title}</span>
+                <span className="small mt-2">{c.body}</span>
+              </label>
+            ))}
+          </div>
+          <p className="small mt-5" style={{ maxWidth: 480 }}>
+            {session ? (
+              <>
+                Signed in as {session.role.toLowerCase().replace("_", " ")} · {session.phone}.{" "}
+                <a
+                  href="/auth"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    signOut();
+                  }}
+                  style={{ textDecoration: "underline" }}
+                >
+                  Sign out
+                </a>
+              </>
+            ) : (
+              "No active session. Choose a role to continue."
+            )}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="auth">
+      <div className="container-narrow">
+        <p className="eyebrow">Sign in — {ROLE_CARDS.find((c) => c.value === role)?.title}</p>
+        <h1 className="h-section">One-time password</h1>
+        <p className="small mt-3" style={{ maxWidth: 480 }}>{ROLE_HINTS[role]}</p>
+
+        {message && (
+          <div className="assisted-banner mt-5" role="status">
+            <StatusLabel label="ROLE MISMATCH" />
+            <span className="small">
+              Signed in as a different role. Please verify as {role.toLowerCase().replace("_", " ")} to
+              continue. You can sign out first if this is not your account.
+            </span>
+          </div>
+        )}
+
+        {session && session.role === role ? (
+          <div className="mt-6" role="status">
+            <StatusLabel label="SIGNED IN" />
+            <p className="small mt-4">
+              Signed in as {session.phone} ({role.toLowerCase().replace("_", " ")}).
+            </p>
+            <div className="intake-result__actions mt-6">
+              <a href={next ?? DEFAULT_NEXT[role]} className="btn btn--primary">Continue</a>
+              <button className="btn btn--ghost" onClick={() => { signOut(); setSent(false); setOtp(""); }}>
+                Sign out
+              </button>
+            </div>
+          </div>
+        ) : (
+          <form
+            className="auth-form mt-6"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!sent) void handleRequest();
+              else void handleVerify();
+            }}
+          >
+            <div className="field">
+              <label className="field__label" htmlFor="phone">Phone number</label>
+              <input
+                id="phone"
+                className="field__input"
+                inputMode="tel"
+                autoComplete="tel"
+                placeholder="10-digit mobile number"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                disabled={sent}
+              />
+            </div>
+
+            {sent && (
+              <div className="field mt-4">
+                <label className="field__label" htmlFor="otp">One-time password</label>
+                <input
+                  id="otp"
+                  className="field__input"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  placeholder="Enter OTP"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                />
+                <p className="field__hint">Demo mode: any 4-digit code is accepted.</p>
+              </div>
+            )}
+
+            {error && <p className="field__error mt-4">{error}</p>}
+
+            <div className="mt-6">
+              <Button type="submit" block disabled={phone.length < 10 || (sent && otp.length < 4) || sending}>
+                {sent ? "Verify" : "Send OTP"}
+              </Button>
+            </div>
+
+            <button type="button" className="btn btn--ghost mt-4" onClick={() => setRole(null)}>
+              ← Choose a different role
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
