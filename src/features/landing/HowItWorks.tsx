@@ -151,7 +151,7 @@ export function HowItWorks() {
           </ol>
           </div>
 
-          <div className="demo-card mt-6">
+          <div className="demo-card mt-8">
             <a className="demo-card__cover" href={DEMO_VIDEO_URL} target="_blank" rel="noreferrer" aria-label={t("Watch the product demo")}>
               <img
                 src="https://img.youtube.com/vi/A_z5g0_hJN8/hqdefault.jpg"
