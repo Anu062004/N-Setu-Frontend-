@@ -424,7 +424,7 @@
 .how-steps {
   list-style: none;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: var(--sp-5);
 }
 
@@ -538,7 +538,7 @@
 
 @media (max-width: 560px) {
   .how-steps {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
   }
 }
 
