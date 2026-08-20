@@ -57,6 +57,7 @@
   --container-narrow: 760px;
   --header-h: 72px;
   --radius: 2px;
+  --radius-card: 2px;
 
   /* ---------- motion ---------- */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);

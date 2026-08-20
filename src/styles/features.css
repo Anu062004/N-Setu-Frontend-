@@ -179,6 +179,14 @@
   row-gap: var(--sp-6);
 }
 
+.footer-brand {
+  grid-column: span 4;
+}
+
+.footer-col {
+  grid-column: span 2;
+}
+
 .footer-links {
   list-style: none;
   margin-top: var(--sp-4);
@@ -300,8 +308,8 @@
 
 .hero-slideshow__controls {
   position: absolute;
-  left: var(--sp-5);
-  right: var(--sp-5);
+  left: 0;
+  right: 0;
   bottom: 0;
   z-index: 3;
   display: flex;
@@ -310,7 +318,7 @@
   gap: var(--sp-4);
   padding: var(--sp-4) var(--sp-5) var(--sp-4);
   margin-inline: auto;
-  max-width: calc(var(--container) - 2 * var(--sp-5));
+  max-width: var(--container);
 }
 
 .hero-slideshow__counter {
@@ -436,7 +444,7 @@
   gap: var(--sp-3);
   padding: var(--sp-5);
   border: 1px solid var(--color-hairline);
-  border-radius: 12px;
+  border-radius: var(--radius-card);
   background: var(--color-paper-warm);
 }
 
@@ -453,7 +461,7 @@
 
 .how-panel {
   border: 1px solid var(--color-hairline);
-  border-radius: 16px;
+  border-radius: var(--radius-card);
   padding: var(--sp-6);
   background: var(--color-paper-warm);
 }
@@ -475,7 +483,7 @@
   gap: var(--sp-6);
   align-items: center;
   border: 1px solid var(--color-hairline);
-  border-radius: 16px;
+  border-radius: var(--radius-card);
   padding: var(--sp-6);
   background: var(--color-paper-warm);
 }
@@ -483,7 +491,7 @@
 .demo-card__cover {
   position: relative;
   display: block;
-  border-radius: 10px;
+  border-radius: var(--radius-card);
   overflow: hidden;
   border: 1px solid var(--color-hairline);
 }
@@ -536,7 +544,7 @@
   aspect-ratio: 4 / 3;
   object-fit: cover;
   border: 1px solid var(--color-hairline);
-  border-radius: 8px;
+  border-radius: var(--radius-card);
 }
 
 @media (max-width: 900px) {
@@ -551,6 +559,14 @@
 
 @media (max-width: 560px) {
   .how-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .principle {
+    grid-column: span 12;
+  }
+
+  .join-images {
     grid-template-columns: 1fr;
   }
 }
@@ -585,6 +601,7 @@
 
 .privilege-card {
   border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-card);
   padding: var(--sp-5);
   background: var(--color-paper-warm);
 }
@@ -943,7 +960,7 @@
   align-content: start;
   padding: var(--sp-5);
   border: 1px solid var(--color-hairline);
-  border-radius: 0;
+  border-radius: var(--radius-card);
   cursor: pointer;
   transition:
     border-color var(--dur-fast) var(--ease-out),
@@ -1024,6 +1041,7 @@
   margin-top: var(--sp-6);
   padding: var(--sp-5);
   border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-card);
   background: var(--color-paper-warm);
 }
 
@@ -1088,6 +1106,7 @@
 .rotation-card {
   padding: var(--sp-6);
   border: 1px solid var(--color-ink);
+  border-radius: var(--radius-card);
 }
 
 .rotation-card__label {
@@ -1120,6 +1139,7 @@
 .profile-card {
   padding: var(--sp-5);
   border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-card);
   background: var(--color-paper-warm);
   position: sticky;
   top: calc(var(--header-h) + var(--sp-5));
@@ -1138,6 +1158,7 @@
   align-items: center;
   padding: var(--sp-3);
   border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-card);
   background: var(--color-paper);
   cursor: pointer;
   text-align: left;
@@ -1182,12 +1203,21 @@
 .dash-section {
   padding: var(--sp-5);
   border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-card);
   background: var(--color-paper-warm);
   margin-bottom: var(--sp-5);
 }
 
 .dash-col {
   min-width: 0;
+}
+
+.col-span-7 {
+  grid-column: span 7;
+}
+
+.col-span-5 {
+  grid-column: span 5;
 }
 
 .redemption-list,
@@ -1204,12 +1234,14 @@
   gap: var(--sp-4);
   padding: var(--sp-4);
   border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-card);
   background: var(--color-paper);
 }
 
 .grievance-item {
   padding: var(--sp-4);
   border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-card);
   background: var(--color-paper);
 }
 
@@ -1237,6 +1269,7 @@
   gap: var(--sp-2);
   padding: var(--sp-2) var(--sp-3);
   border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-card);
   font-size: var(--text-xs);
   letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
@@ -1290,6 +1323,7 @@
 .credential-leg {
   padding: var(--sp-4);
   border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-card);
   background: var(--color-paper-warm);
   display: grid;
   gap: var(--sp-3);
@@ -1314,6 +1348,7 @@
   gap: var(--sp-2);
   padding: var(--sp-3);
   border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-card);
   background: var(--color-paper);
   cursor: pointer;
   transition: border-color var(--dur-fast) var(--ease-out);
@@ -1376,6 +1411,13 @@
   padding-block: var(--sp-8) var(--sp-9);
 }
 
+.referral,
+.grievance,
+.citizen-portal,
+.assisted-audit {
+  padding-block: var(--sp-8) var(--sp-9);
+}
+
 .assisted-banner {
   display: flex;
   align-items: center;
@@ -1383,6 +1425,7 @@
   margin-top: var(--sp-5);
   padding: var(--sp-4);
   border: 1px solid var(--color-amber);
+  border-radius: var(--radius-card);
   background: var(--color-amber-soft);
   flex-wrap: wrap;
 }
@@ -1390,6 +1433,7 @@
 .assisted-card {
   padding: var(--sp-6);
   border: 1px solid var(--color-ink);
+  border-radius: var(--radius-card);
   max-width: 640px;
 }
 
@@ -1445,6 +1489,11 @@
     grid-template-columns: 1fr;
   }
 
+  .footer-brand,
+  .footer-col {
+    grid-column: span 6;
+  }
+
   .intake-progress {
     grid-template-columns: 1fr;
     gap: var(--sp-2);
@@ -1453,6 +1502,10 @@
   .provider-row {
     grid-template-columns: 1fr;
     gap: var(--sp-3);
+  }
+
+  .dash-col {
+    grid-column: span 12;
   }
 
   .provider-row__fees,
@@ -1471,19 +1524,27 @@
   }
 
   .hero-slideshow__controls {
-    left: var(--sp-4);
-    right: var(--sp-4);
-    padding-inline: 0;
+    padding-inline: var(--sp-4);
   }
 }
 
 @media (max-width: 480px) {
+  .container,
+  .container-narrow {
+    padding-inline: var(--sp-4);
+  }
+
   .header-brand__name {
     display: none;
   }
 
   .header-actions {
-    gap: var(--sp-3);
+    gap: var(--sp-2);
     padding-left: var(--sp-3);
+  }
+
+  .footer-brand,
+  .footer-col {
+    grid-column: span 12;
   }
 }

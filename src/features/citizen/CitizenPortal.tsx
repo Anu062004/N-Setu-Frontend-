@@ -43,7 +43,7 @@ export function CitizenPortal() {
         />
 
         <div className="grid-12 mt-6">
-          <div className="dash-col" style={{ gridColumn: "span 7" }}>
+          <div className="dash-col col-span-7">
             <div className="dash-section">
               <h2 className="h-micro">{t("My needs")}</h2>
               <ul className="grievance-list mt-4">
@@ -92,7 +92,7 @@ export function CitizenPortal() {
             </div>
           </div>
 
-          <div className="dash-col" style={{ gridColumn: "span 5" }}>
+          <div className="dash-col col-span-5">
             <div className="dash-section">
               <h2 className="h-micro">{t("Matters")}</h2>
               <ul className="grievance-list mt-4">

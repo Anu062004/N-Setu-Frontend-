@@ -26,7 +26,7 @@ export function Institutional() {
         </p>
 
         <div className="grid-12 mt-6">
-          <div className="dash-col" style={{ gridColumn: "span 7" }}>
+          <div className="dash-col col-span-7">
             <div className="dash-section">
               <h2 className="h-micro">{t("Aggregate statistics")}</h2>
               <table className="table table--dense mt-4">
@@ -87,7 +87,7 @@ export function Institutional() {
             </div>
           </div>
 
-          <div className="dash-col" style={{ gridColumn: "span 5" }}>
+          <div className="dash-col col-span-5">
             <div className="dash-section">
               <h2 className="h-micro">{t("Grievance pipeline")}</h2>
               <ul className="grievance-list mt-4">

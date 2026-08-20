@@ -40,7 +40,7 @@ export function Footer() {
     <footer className="site-footer">
       <div className="container">
         <div className="grid-12 footer-grid">
-          <div className="footer-brand" style={{ gridColumn: "span 4" }}>
+          <div className="footer-brand">
             <Link to="/" className="header-brand" aria-label={t("Nayasetu — home")}>
               <img src="/brand/logo.png" alt="" className="header-brand__logo" />
               <span className="header-brand__name">Nayasetu</span>
@@ -52,7 +52,7 @@ export function Footer() {
             </p>
           </div>
           {COLUMNS.map((c) => (
-            <div key={c.title} style={{ gridColumn: "span 2" }}>
+            <div key={c.title} className="footer-col">
               <p className="h-micro">{t(c.title)}</p>
               <ul className="footer-links">
                 {c.links.map((l) => (
@@ -63,7 +63,7 @@ export function Footer() {
               </ul>
             </div>
           ))}
-          <div style={{ gridColumn: "span 2" }}>
+          <div className="footer-col">
             <p className="h-micro">{t("Trust")}</p>
             <ul className="footer-links">
               <li>
