@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
+import { GoogleButton } from "../../components/ui/GoogleButton";
 import { StatusLabel } from "../../components/ui/StatusLabel";
 import { api, ApiError, GOOGLE_START_URL, checkGoogleLoginAvailable } from "../../lib/api";
 import { useAuth, type AuthRole } from "./AuthContext";
@@ -143,9 +144,7 @@ export function OtpSignIn() {
           {(!requestedRole || requestedRole === "CITIZEN") && (
             <>
               <div className="mt-6">
-                <Button block onClick={() => void handleGoogleSignIn()} disabled={googleStarting}>
-                  {googleStarting ? t("Redirecting to Google…") : t("Sign in with Google")}
-                </Button>
+                <GoogleButton onClick={() => void handleGoogleSignIn()} loading={googleStarting} />
                 {googleUnavailable && (
                   <p className="field__error mt-3" role="status">
                     {t(

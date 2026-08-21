@@ -1548,3 +1548,70 @@
     grid-column: span 12;
   }
 }
+/* ---------- Sign in with Google (identity brand guidelines) ---------- */
+.google-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 24px;
+  background-color: #ffffff;
+  color: #1f1f1f;
+  border: 1px solid #747775;
+  border-radius: 4px;
+  font-family: Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.google-btn:hover:not(:disabled) {
+  background-color: #f7f8f8;
+  box-shadow: 0 1px 2px rgba(60, 64, 67, 0.16);
+}
+
+.google-btn:focus-visible {
+  outline: 2px solid #1a73e8;
+  outline-offset: 2px;
+}
+
+.google-btn:active:not(:disabled) {
+  background-color: #eef1f3;
+  box-shadow: none;
+}
+
+.google-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.google-btn__logo {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.google-btn__label {
+  white-space: nowrap;
+}
+
+.google-btn__spinner {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  border: 2px solid #dadce0;
+  border-top-color: #4285f4;
+  border-radius: 50%;
+  animation: google-btn-spin 0.8s linear infinite;
+}
+
+@keyframes google-btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
