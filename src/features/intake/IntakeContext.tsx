@@ -1,8 +1,8 @@
 import { createContext, useContext, useMemo, useState } from "react";
 import type { Channel, EligibilityDecision, TaxCategory } from "../../lib/types";
 import { api } from "../../lib/api";
-import { rememberNeed } from "../../lib/needHistory";
 import type { NeedRequest } from "../../lib/types";
+import { useAuth } from "../auth/AuthContext";
 
 export interface IntakeState {
   step: number;
@@ -30,6 +30,7 @@ interface IntakeContextValue {
 const IntakeContext = createContext<IntakeContextValue | null>(null);
 
 export function IntakeProvider({ children }: { children: React.ReactNode }) {
+  const { session } = useAuth();
   const [state, setState] = useState<IntakeState>({
     step: 0,
     taxonomyCode: null,
@@ -49,26 +50,25 @@ export function IntakeProvider({ children }: { children: React.ReactNode }) {
       setStep: (step) => setState((s) => ({ ...s, step })),
       setField: (key, val) => setState((s) => ({ ...s, [key]: val })),
       submit: async () => {
+        if (!session?.userId) throw new Error("Not signed in");
         const { need, decision } = await api.createNeed({
+          citizenUserId: session.userId,
           taxonomyCode: state.taxonomyCode ?? "OTHER",
           district: state.district || "Patna",
           language: state.language,
-          modePref: state.modePref,
+          modePreference: state.modePref,
+          channel: state.modePref,
           feeCeiling: state.feeCeiling,
           urgency: state.urgency,
-          selfDeclaredSection12: state.selfDeclaredSection12,
+          ...(state.selfDeclaredSection12
+            ? { selfDeclaredSection12Category: state.selfDeclaredSection12 }
+            : {}),
         });
         setState((s) => ({ ...s, needId: need.id }));
-        rememberNeed({
-          needId: need.id,
-          route: decision?.route ?? null,
-          taxonomyCode: need.taxonomyCode ?? state.taxonomyCode ?? "OTHER",
-          district: need.district || state.district || "",
-        });
         return { need, decision };
       },
     }),
-    [state],
+    [state, session?.userId],
   );
 
   return <IntakeContext.Provider value={value}>{children}</IntakeContext.Provider>;

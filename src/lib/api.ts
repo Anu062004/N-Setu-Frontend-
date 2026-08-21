@@ -360,7 +360,17 @@ export const api = {
     request<void>(`/v1/auth/delegation/${delegationId}`, { method: "DELETE" }),
 
   /* ---------- intake & allocation ---------- */
-  createNeed: (input: Omit<NeedRequest, "id"> & { selfDeclaredSection12?: string | null }) =>
+  createNeed: (input: {
+    citizenUserId: string;
+    taxonomyCode?: string;
+    district: string;
+    language: string;
+    modePreference: string;
+    channel: string;
+    feeCeiling: number | null;
+    urgency: string;
+    selfDeclaredSection12Category?: string | null;
+  }) =>
     request<unknown>("/v1/needs", { method: "POST", body: input }).then((raw) => {
       const r = asRecord(raw);
       const need = normaliseNeed(r.need ?? raw);
