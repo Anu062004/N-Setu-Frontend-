@@ -1,50 +1,93 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
 import { StatusLabel, TierLabel } from "../../components/ui/StatusLabel";
-import { api } from "../../lib/api";
-import type { ProviderVerification, VerificationCaseResult } from "../../lib/types";
-import { LEG_LABELS, REQUIRED_LEGS, sortLegs, decideTier } from "../../lib/verification";
-import { CURRENT_PROVIDER } from "../../lib/seed";
+import { api, ApiError } from "../../lib/api";
+import type { ProviderVerification } from "../../lib/types";
+import { LEG_LABELS, REQUIRED_LEGS, sortLegs } from "../../lib/verification";
+import { useAuth } from "../auth/AuthContext";
 import { useI18n } from "../../lib/i18n";
 
 export function ProviderVerificationPage() {
   const { t } = useI18n();
+  const { session } = useAuth();
+  const providerId = session?.providerId ?? null;
+
   const [verification, setVerification] = useState<ProviderVerification | null>(null);
-  const [refreshResult, setRefreshResult] = useState<VerificationCaseResult | null>(null);
-  const [reverifying, setReverifying] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    api.getProviderVerification(CURRENT_PROVIDER).then(setVerification);
-  }, []);
+  const load = () => {
+    if (!providerId) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    api
+      .getVerification(providerId)
+      .then(setVerification)
+      .catch((e) =>
+        setError(e instanceof ApiError ? `${e.code} — ${e.message}` : "Could not load verification"),
+      )
+      .finally(() => setLoading(false));
+  };
 
-  const handleReverify = async () => {
-    setReverifying(true);
+  useEffect(load, [providerId]);
+
+  const handleRefresh = async () => {
+    if (!providerId) return;
+    setRefreshing(true);
     setError(null);
     try {
-      const r = await api.runReverification(CURRENT_PROVIDER);
-      setRefreshResult(r);
-      setVerification((v) =>
-        v
-          ? {
-              ...v,
-              tier: r.tier,
-              decidedAt: r.decidedAt,
-              checks: r.checks,
-            }
-          : v,
-      );
+      setVerification(await api.getVerification(providerId));
     } catch (e) {
-      setError(e instanceof Error ? e.message : t("Reverification failed"));
+      setError(e instanceof ApiError ? `${e.code} — ${e.message}` : t("Refresh failed"));
     } finally {
-      setReverifying(false);
+      setRefreshing(false);
     }
   };
+
+  if (!providerId) {
+    return (
+      <div className="container-narrow mt-8">
+        <p className="eyebrow">{t("Credential rail")}</p>
+        <h1 className="h-section mt-3">{t("No professional profile on this session")}</h1>
+        <p className="small mt-4" style={{ maxWidth: 560 }}>
+          {t("Create your professional profile to open a verification case.")}
+        </p>
+        <div className="mt-6 intake-result__actions">
+          <Link to="/provider/onboarding" className="btn btn--primary">
+            {t("Create your profile")}
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading && !verification) {
+    return (
+      <div className="container-narrow mt-8">
+        <p className="meta">{t("Loading verification…")}</p>
+      </div>
+    );
+  }
 
   if (!verification) {
     return (
       <div className="container-narrow mt-8">
-        <p className="meta">{t("Loading verification…")}</p>
+        <p className="eyebrow">{t("Credential rail")}</p>
+        <h1 className="h-section mt-3">{t("No verification case yet")}</h1>
+        {error && (
+          <p className="small mt-4" role="alert">
+            <code className="meta">{error}</code>
+          </p>
+        )}
+        <p className="small mt-4" style={{ maxWidth: 560 }}>
+          {t(
+            "A verification case is opened when your profile is created. Credential sources are OFF in this deployment, so checks stay honestly UNAVAILABLE until a source is enabled.",
+          )}
+        </p>
       </div>
     );
   }
@@ -64,6 +107,15 @@ export function ProviderVerificationPage() {
           )}
         </p>
 
+        <div className="assisted-banner mt-5" role="status">
+          <StatusLabel label={t("CREDENTIAL SOURCES OFF")} />
+          <span className="small">
+            {t(
+              "Issuer-fetch and upload credential modes are switched off in this deployment. Checks cannot run live; results shown are the server's honest fail-closed state.",
+            )}
+          </span>
+        </div>
+
         {stale && (
           <div className="assisted-banner mt-5" role="status">
             <StatusLabel label={t("REVERIFICATION DUE")} />
@@ -72,29 +124,6 @@ export function ProviderVerificationPage() {
                 "Your FULLY VERIFIED status has passed its freshness window and has degraded to DOCUMENT-VERIFIED. Re-run verification to restore it.",
               )}
             </span>
-          </div>
-        )}
-
-        {refreshResult && (
-          <div className="mt-5" role="status">
-            <TierLabel
-              tier={t(
-                refreshResult.tier === "FULLY_VERIFIED"
-                  ? "FULLY VERIFIED"
-                  : refreshResult.tier === "DOCUMENT_VERIFIED"
-                    ? "DOCUMENT-VERIFIED"
-                    : "SELF-DECLARED",
-              )}
-            />
-            <p className="small mt-3">
-              {t("Re-verified {date} — case {caseId}.", {
-                date: new Date(refreshResult.decidedAt).toLocaleString("en-IN"),
-                caseId: refreshResult.caseId,
-              })}{" "}
-              {decideTier("ADVOCATE", refreshResult.checks)
-                .reasons.map((r) => t(r))
-                .join(" ")}
-            </p>
           </div>
         )}
 
@@ -160,12 +189,12 @@ export function ProviderVerificationPage() {
         </table>
 
         <div className="mt-5">
-          <Button onClick={() => void handleReverify()} disabled={reverifying}>
-            {reverifying ? t("Re-running checks…") : t("Run reverification")}
+          <Button onClick={() => void handleRefresh()} disabled={refreshing}>
+            {refreshing ? t("Refreshing…") : t("Refresh status")}
           </Button>
           <span className="small" style={{ marginLeft: "var(--sp-4)" }}>
             {t(
-              "Re-runs each check against its configured source. UNAVAILABLE sources cap the tier — they never grant one.",
+              "Live reverification needs an enabled credential source. With sources OFF, UNAVAILABLE never grants a tier — it only caps one.",
             )}
           </span>
         </div>

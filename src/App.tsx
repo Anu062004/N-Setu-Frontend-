@@ -61,7 +61,14 @@ export default function App() {
             <Route path="/portal" element={<CitizenPortal />} />
             <Route path="/grievance" element={<Grievance />} />
             <Route path="/auth" element={<OtpSignIn />} />
-            <Route path="/assist" element={<AssistedMode />} />
+            <Route
+              path="/assist"
+              element={
+                <RequireRole role="OPERATOR">
+                  <AssistedMode />
+                </RequireRole>
+              }
+            />
             <Route path="/assist/audit" element={<AssistedAudit />} />
             <Route path="/provider/join" element={<ProviderJoin />} />
             <Route

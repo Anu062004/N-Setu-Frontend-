@@ -1,17 +1,16 @@
 import { useEffect, useState } from "react";
-import { api } from "../../lib/api";
+import { Link } from "react-router-dom";
+import { api, ApiError } from "../../lib/api";
 import type {
-  Grievance,
   LedgerSummary,
-  ProviderAppointment,
-  ProviderPaymentStatus,
   ProviderVerification,
-  Slot,
+  RedemptionArtefact,
+  SlotsResponse,
 } from "../../lib/types";
 import { StatusLabel, TierLabel } from "../../components/ui/StatusLabel";
 import { Button } from "../../components/ui/Button";
-import { formatINR, formatDate, formatTime } from "../../lib/format";
-import { CURRENT_PROVIDER } from "../../lib/seed";
+import { formatDate } from "../../lib/format";
+import { useAuth } from "../auth/AuthContext";
 import { useI18n } from "../../lib/i18n";
 
 const REDEMPTIONS = [
@@ -23,25 +22,53 @@ const REDEMPTIONS = [
 
 export function ProviderDashboard() {
   const { t } = useI18n();
+  const { session } = useAuth();
+  const providerId = session?.providerId ?? null;
+
   const [verification, setVerification] = useState<ProviderVerification | null>(null);
   const [ledger, setLedger] = useState<LedgerSummary | null>(null);
-  const [appointments, setAppointments] = useState<ProviderAppointment[]>([]);
-  const [payments, setPayments] = useState<ProviderPaymentStatus[]>([]);
-  const [grievances, setGrievances] = useState<Grievance[]>([]);
-  const [slots, setSlots] = useState<Slot[]>([]);
-  const [newSlot, setNewSlot] = useState("");
-  const [redeemed, setRedeemed] = useState<{ id: string; type: string } | null>(null);
+  const [slotsData, setSlotsData] = useState<SlotsResponse | null>(null);
+  const [redeemed, setRedeemed] = useState<RedemptionArtefact | null>(null);
+  const [redeemError, setRedeemError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  const load = () => {
-    api.getProviderVerification(CURRENT_PROVIDER).then(setVerification);
-    api.getLedger(CURRENT_PROVIDER).then(setLedger);
-    api.getAppointments(CURRENT_PROVIDER).then(setAppointments);
-    api.getProviderPayments(CURRENT_PROVIDER).then(setPayments);
-    api.getProviderGrievances(CURRENT_PROVIDER).then(setGrievances);
-    api.getSlots(CURRENT_PROVIDER).then(setSlots);
-  };
+  useEffect(() => {
+    if (!providerId) return;
+    let alive = true;
+    setLoadError(null);
+    Promise.all([
+      api.getVerification(providerId).then(setVerification),
+      api.getCredits().then(setLedger),
+      api.getSlots(providerId).then(setSlotsData),
+    ]).catch((e) => {
+      if (!alive) return;
+      setLoadError(
+        e instanceof ApiError ? `${e.code} — ${e.message}` : e instanceof Error ? e.message : "Could not load dashboard",
+      );
+    });
+    return () => {
+      alive = false;
+    };
+  }, [providerId]);
 
-  useEffect(load, []);
+  if (!providerId) {
+    return (
+      <div className="container-narrow mt-8">
+        <p className="eyebrow">{t("Provider surface")}</p>
+        <h1 className="h-section mt-3">{t("No professional profile on this session")}</h1>
+        <p className="small mt-4" style={{ maxWidth: 560 }}>
+          {t(
+            "This dashboard shows your real verification, ledger and availability. Create your professional profile first — the dashboard binds to the profile you create.",
+          )}
+        </p>
+        <div className="mt-6 intake-result__actions">
+          <Link to="/provider/onboarding" className="btn btn--primary">
+            {t("Create your profile")}
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const stale =
     verification &&
@@ -49,15 +76,20 @@ export function ProviderDashboard() {
       Date.now();
 
   const handleRedeem = async (type: string) => {
-    const r = await api.redeem(CURRENT_PROVIDER, type);
-    setRedeemed({ id: r.redemptionId, type });
-  };
-
-  const handleAddSlot = async () => {
-    if (!newSlot) return;
-    await api.addSlot(CURRENT_PROVIDER, new Date(newSlot).toISOString());
-    setNewSlot("");
-    api.getSlots(CURRENT_PROVIDER).then(setSlots);
+    setRedeemError(null);
+    try {
+      const r =
+        type === "SERVICE_RECORD_EXPORT"
+          ? await api.getServiceRecord()
+          : type === "PANEL_APPLICATION_EVIDENCE_PACKET"
+            ? await api.getPanelEvidence()
+            : await api.redeem(type);
+      setRedeemed(r);
+    } catch (e) {
+      setRedeemError(
+        e instanceof ApiError ? `${e.code} — ${e.message}` : e instanceof Error ? e.message : "Export failed",
+      );
+    }
   };
 
   return (
@@ -65,7 +97,7 @@ export function ProviderDashboard() {
       <div className="container">
         <div className="flex-between">
           <div>
-            <p className="eyebrow">{t("Provider surface")} · Adv. Sunita Kumari</p>
+            <p className="eyebrow">{t("Provider surface")} · {session?.phone}</p>
             <h1 className="h-section">{t("Dashboard")}</h1>
           </div>
           <div className="flex-between" style={{ gap: "var(--sp-3)" }}>
@@ -81,6 +113,13 @@ export function ProviderDashboard() {
               {t("Freshness window passed — tier has degraded to DOCUMENT-VERIFIED.")}{" "}
               <a href="/provider/verification" style={{ textDecoration: "underline" }}>{t("Re-verify now")}</a>.
             </span>
+          </div>
+        )}
+
+        {loadError && (
+          <div className="assisted-banner mt-5" role="alert">
+            <StatusLabel label={t("ERROR")} />
+            <span className="small">{t(loadError)}</span>
           </div>
         )}
 
@@ -103,6 +142,13 @@ export function ProviderDashboard() {
                       </tr>
                     </thead>
                     <tbody>
+                      {verification.checks.length === 0 && (
+                        <tr>
+                          <td className="small" colSpan={3}>
+                            {t("No checks recorded yet — credential sources are offline in this deployment.")}
+                          </td>
+                        </tr>
+                      )}
                       {verification.checks.map((c) => (
                         <tr key={c.checkType}>
                           <td className="small">{t(c.checkType)}</td>
@@ -134,7 +180,7 @@ export function ProviderDashboard() {
                       <p className="h-sub tabular">{ledger.totalCredits}</p>
                     </div>
                     <div>
-                      <p className="meta">{t("Period credits (Aug)")}</p>
+                      <p className="meta">{t("Period credits (this month)")}</p>
                       <p className="h-sub tabular">{ledger.periodCredits}</p>
                     </div>
                     <div>
@@ -152,6 +198,13 @@ export function ProviderDashboard() {
                       </tr>
                     </thead>
                     <tbody>
+                      {ledger.events.length === 0 && (
+                        <tr>
+                          <td className="small" colSpan={4}>
+                            {t("No credit events yet — credits accrue when pro bono matters close.")}
+                          </td>
+                        </tr>
+                      )}
                       {ledger.events.map((e) => (
                         <tr key={e.id}>
                           <td className="small tabular">{formatDate(e.occurredAt)}</td>
@@ -173,50 +226,39 @@ export function ProviderDashboard() {
 
             <div className="dash-section">
               <h2 className="h-micro">{t("Availability")}</h2>
-              <div className="availability-add mt-4">
-                <input
-                  className="field__input"
-                  type="datetime-local"
-                  value={newSlot}
-                  onChange={(e) => setNewSlot(e.target.value)}
-                  aria-label={t("Add a slot")}
-                />
-                <Button size="sm" variant="ghost" onClick={() => void handleAddSlot()} disabled={!newSlot}>
-                  {t("Add slot")}
-                </Button>
-              </div>
-              <ul className="slot-list mt-4">
-                {slots.map((s) => (
-                  <li key={s.id} className="slot-item" style={{ cursor: "default" }}>
-                    <span className="small tabular">{formatDate(s.startsAt)} · {formatTime(s.startsAt)}</span>
-                    <StatusLabel label={t(s.available ? "AVAILABLE" : "BOOKED")} />
-                  </li>
-                ))}
-              </ul>
+              {slotsData && (
+                slotsData.availabilityPolicy === "CONFIGURED" && slotsData.slots.length > 0 ? (
+                  <ul className="slot-list mt-4">
+                    {slotsData.slots.map((s) => (
+                      <li key={s.id} className="slot-item" style={{ cursor: "default" }}>
+                        <span className="small tabular">{new Date(s.startsAt).toLocaleString("en-IN")}</span>
+                        <StatusLabel label={t(s.available ? "AVAILABLE" : "BOOKED")} />
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="mt-4" role="status">
+                    <StatusLabel label={t("SCHEDULING NOT CONFIGURED")} />
+                    <p className="small mt-3" style={{ maxWidth: 520 }}>
+                      {t(
+                        "Your availability policy is not configured on the server, so citizens cannot book real slots with you yet. Slot management is not exposed by this deployment.",
+                      )}
+                    </p>
+                  </div>
+                )
+              )}
             </div>
 
             <div className="dash-section">
               <h2 className="h-micro">{t("Quotes / payment status")}</h2>
-              <table className="table table--dense mt-4">
-                <thead>
-                  <tr>
-                    <th>{t("Booking")}</th>
-                    <th style={{ textAlign: "right" }}>{t("Amount")}</th>
-                    <th>{t("State")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {payments.map((p) => (
-                    <tr key={p.bookingId}>
-                      <td className="small tabular">{p.bookingId}</td>
-                      <td className="small tabular" style={{ textAlign: "right" }}>
-                        {p.amount === 0 ? t("s.12 / pro bono") : formatINR(p.amount)}
-                      </td>
-                      <td><StatusLabel label={t(p.state)} /></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div className="mt-4" role="status">
+                <StatusLabel label={t("PAYMENTS OFF")} />
+                <p className="small mt-3" style={{ maxWidth: 520 }}>
+                  {t(
+                    "PAYMENTS_MODE=OFF in this deployment. Quotes can be raised, but no payment intent can be created and no amount can move. This section will list live payment states once the payment capability is enabled by an authorized PSP.",
+                  )}
+                </p>
+              </div>
               <p className="small mt-3">
                 {t("Payments move through an authorized PSP. Only a verified PSP webhook or server-side status check moves payment state — never a frontend callback.")}
               </p>
@@ -226,17 +268,12 @@ export function ProviderDashboard() {
           <div className="dash-col col-span-5">
             <div className="dash-section">
               <h2 className="h-micro">{t("Appointments")}</h2>
-              <ul className="grievance-list mt-4">
-                {appointments.map((a) => (
-                  <li key={a.id} className="grievance-item">
-                    <div className="flex-between">
-                      <span className="small tabular">{formatDate(a.startsAt)} · {formatTime(a.startsAt)}</span>
-                      <StatusLabel label={t(a.state)} />
-                    </div>
-                    <p className="small mt-3">{a.citizenLabel} · {t(a.category)}</p>
-                  </li>
-                ))}
-              </ul>
+              <div className="mt-4" role="status">
+                <StatusLabel label={t("SCHEDULING NOT CONFIGURED")} />
+                <p className="small mt-3">
+                  {t("No availability policy is configured, so no appointments can exist yet.")}
+                </p>
+              </div>
             </div>
 
             <div className="dash-section">
@@ -256,27 +293,25 @@ export function ProviderDashboard() {
               </ul>
               {redeemed && (
                 <p className="small mt-4" role="status">
-                  {redeemed.id} · {t("{type} generated — evidence artefact, not an official decision.", { type: redeemed.type })}
+                  {redeemed.redemptionId} · {t("{type} generated — evidence artefact, not an official decision.", { type: redeemed.type })}
                 </p>
               )}
+              {redeemError && <p className="field__error mt-4">{t(redeemError)}</p>}
               <p className="small mt-4">
                 {t("Evidence packets support applications you make to statutory bodies — the platform does not decide eligibility and does not self-issue recognition.")}
               </p>
             </div>
 
             <div className="dash-section">
-              <h2 className="h-micro">{t("Grievances")}</h2>
-              <ul className="grievance-list mt-4">
-                {grievances.map((g) => (
-                  <li key={g.id} className="grievance-item">
-                    <div className="flex-between">
-                      <span className="small tabular">{g.id}</span>
-                      <StatusLabel label={t(g.status)} />
-                    </div>
-                    <p className="small mt-3">{t(g.summary)}</p>
-                  </li>
-                ))}
-              </ul>
+              <h2 className="h-micro">{t("Grievances about you")}</h2>
+              <div className="mt-4" role="status">
+                <StatusLabel label={t("NOT EXPOSED HERE")} />
+                <p className="small mt-3">
+                  {t(
+                    "Grievance records are visible to institutions through the scoped institutional surface. They are not listed on the provider dashboard in this deployment.",
+                  )}
+                </p>
+              </div>
               <p className="small mt-4">
                 {t("Conduct signals are objective, platform-observable facts — response time, no-show, quote honoured. They feed rotation duty accounting and grievance thresholds; they are never shown to citizens.")}
               </p>

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
 import { StatusLabel } from "../../components/ui/StatusLabel";
-import { api } from "../../lib/api";
+import { api, ApiError } from "../../lib/api";
 import { useAuth, type AuthRole } from "./AuthContext";
 import { useI18n } from "../../lib/i18n";
 
@@ -58,6 +58,7 @@ export function OtpSignIn() {
   const [otp, setOtp] = useState("");
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
+  const [otpUnavailable, setOtpUnavailable] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleRequest = async () => {
@@ -68,7 +69,11 @@ export function OtpSignIn() {
       await api.requestOtp(phone);
       setSent(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to send OTP");
+      if (e instanceof ApiError && e.unavailable) {
+        setOtpUnavailable(e.code);
+      } else {
+        setError(e instanceof Error ? e.message : "Failed to send OTP");
+      }
     } finally {
       setSending(false);
     }
@@ -79,10 +84,21 @@ export function OtpSignIn() {
     setError(null);
     try {
       const verified = await api.verifyOtp(phone, otp);
-      signIn({ userId: verified.userId, phone, role, token: verified.token });
+      signIn({
+        userId: verified.userId,
+        phone,
+        role,
+        token: verified.token,
+      });
       navigate(next ?? DEFAULT_NEXT[role], { replace: true });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Invalid OTP");
+      setError(
+        e instanceof ApiError
+          ? `${e.code} — ${e.message}`
+          : e instanceof Error
+            ? e.message
+            : "Invalid OTP",
+      );
     }
   };
 
@@ -126,7 +142,37 @@ export function OtpSignIn() {
                   {t("Sign out")}
                 </a>
               </>
-            ) : (
+        ) : otpUnavailable ? (
+          <div className="mt-6" role="alert">
+            <StatusLabel label="SERVICE UNAVAILABLE" />
+            <p className="small mt-4" style={{ maxWidth: 520 }}>
+              {t(
+                "Phone sign-in is not available right now ({code}). No OTP provider is configured in this deployment, so no code can be sent and no session can be created.",
+                { code: otpUnavailable },
+              )}
+            </p>
+            <p className="small mt-3" style={{ maxWidth: 520 }}>
+              {t(
+                "This is an honest fail-closed state — the platform will not simulate a sign-in. You can retry below in case the capability has been enabled, or continue browsing public surfaces.",
+              )}
+            </p>
+            <div className="intake-result__actions mt-6">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setOtpUnavailable(null);
+                  void handleRequest();
+                }}
+                disabled={sending}
+              >
+                {sending ? t("Retrying…") : t("Retry")}
+              </Button>
+              <a href="/" className="btn btn--ghost">
+                {t("Back to home")}
+              </a>
+            </div>
+          </div>
+        ) : (
               t("No active session. Choose a role to continue.")
             )}
           </p>
@@ -208,7 +254,9 @@ export function OtpSignIn() {
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
                 />
-                <p className="field__hint">{t("Demo mode: any 4-digit code is accepted.")}</p>
+                <p className="field__hint">
+                  {t("A 6-digit code is sent to this number. Rates apply: 5 requests per 10 minutes.")}
+                </p>
               </div>
             )}
 

@@ -1,26 +1,86 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { api } from "../../lib/api";
-import type { CitizenPortalView } from "../../lib/types";
-import { CATEGORY_LABELS, SECTION12_LABELS, decideRoute, DISTRICT_FLOOR_BY_CATEGORY } from "../../lib/eligibility";
+import { api, ApiError } from "../../lib/api";
+import type { MatterMetadata } from "../../lib/types";
+import { CATEGORY_LABELS } from "../../lib/eligibility";
 import { StatusLabel } from "../../components/ui/StatusLabel";
+import { Button } from "../../components/ui/Button";
 import { formatDate, formatINR } from "../../lib/format";
-import { languageLabel } from "../../lib/languages";
 import { SmartImage } from "../../components/ui/SmartImage";
+import { useAuth } from "../auth/AuthContext";
 import { useI18n } from "../../lib/i18n";
 
 export function CitizenPortal() {
   const { t } = useI18n();
-  const [data, setData] = useState<CitizenPortalView | null>(null);
+  const { session } = useAuth();
+
+  const [matterId, setMatterId] = useState("");
+  const [matter, setMatter] = useState<MatterMetadata | null>(null);
+  const [matterError, setMatterError] = useState<string | null>(null);
+  const [lookupBusy, setLookupBusy] = useState(false);
+  const [closeState, setCloseState] = useState<{ busy: boolean; done: boolean; error: string | null }>({
+    busy: false,
+    done: false,
+    error: null,
+  });
 
   useEffect(() => {
-    api.getCitizenPortal().then(setData);
-  }, []);
+    setMatter(null);
+    setMatterError(null);
+    setCloseState({ busy: false, done: false, error: null });
+  }, [session]);
 
-  if (!data) {
+  const lookup = async () => {
+    if (!matterId.trim()) return;
+    setLookupBusy(true);
+    setMatterError(null);
+    setMatter(null);
+    try {
+      setMatter(await api.getMatterStatus(matterId.trim()));
+    } catch (e) {
+      setMatterError(
+        e instanceof ApiError ? `${e.code} — ${e.message}` : e instanceof Error ? e.message : "Lookup failed",
+      );
+    } finally {
+      setLookupBusy(false);
+    }
+  };
+
+  const close = async () => {
+    if (!matter) return;
+    setCloseState({ busy: true, done: false, error: null });
+    try {
+      const updated = await api.closeMatter(matter.id);
+      setMatter(updated);
+      setCloseState({ busy: false, done: true, error: null });
+    } catch (e) {
+      setCloseState({
+        busy: false,
+        done: false,
+        error:
+          e instanceof ApiError ? `${e.code} — ${e.message}` : e instanceof Error ? e.message : "Close failed",
+      });
+    }
+  };
+
+  if (!session) {
     return (
       <div className="container-narrow mt-8">
-        <p className="meta">{t("Loading your portal…")}</p>
+        <p className="eyebrow">{t("Citizen portal")}</p>
+        <h1 className="h-section mt-3">{t("Sign in to track your matters")}</h1>
+        <p className="small mt-4" style={{ maxWidth: 560 }}>
+          {t(
+            "Your portal shows matter metadata only — who, when, category, status, fee. No case content is ever stored here.",
+          )}
+        </p>
+        <div className="mt-6 intake-result__actions">
+          <Link to="/auth?role=CITIZEN&next=%2Fportal" className="btn btn--primary">
+            {t("Sign in")}
+          </Link>
+          <Link to="/start" className="btn btn--outline">
+            {t("Start a legal need")}
+          </Link>
+        </div>
       </div>
     );
   }
@@ -32,7 +92,7 @@ export function CitizenPortal() {
         <h1 className="h-section">{t("My legal matters")}</h1>
         <p className="small mt-3" style={{ maxWidth: 600 }}>
           {t(
-            "Your needs, routes and matter metadata. Engagements are metadata only — who, when, category, status, fee, CNR pointer. No case content is stored here."
+            "Engagements are metadata only — who, when, category, status, fee, CNR pointer. No case content is stored here.",
           )}
         </p>
 
@@ -45,79 +105,94 @@ export function CitizenPortal() {
         <div className="grid-12 mt-6">
           <div className="dash-col col-span-7">
             <div className="dash-section">
-              <h2 className="h-micro">{t("My needs")}</h2>
-              <ul className="grievance-list mt-4">
-                {data.needs.map((n) => {
-                  const decision = decideRoute({
-                    selfDeclaredSection12: n.selfDeclaredSection12,
-                    feeCeiling: n.feeCeiling,
-                    districtFloor: DISTRICT_FLOOR_BY_CATEGORY[n.taxonomyCode] ?? 3000,
-                  });
-                  return (
-                    <li key={n.id} className="grievance-item">
-                      <div className="flex-between">
-                        <span className="small tabular">{n.id}</span>
-                        <StatusLabel
-                          label={t(decision.route === "LEGAL_AID_REFERRAL" ? "LEGAL AID" : decision.route === "PRO_BONO_ROTATION" ? "PRO BONO" : "PAID")}
-                        />
-                      </div>
-                      <p className="small mt-3">
-                        {t(CATEGORY_LABELS[n.taxonomyCode])} · {n.district} · {languageLabel(n.language)} ·{" "}
-                        {t(n.modePref)}
-                      </p>
-                      <p className="small mt-2" style={{ color: "var(--color-gray-light)" }}>
-                        {n.selfDeclaredSection12
-                          ? t("Section 12: {label}", { label: t(SECTION12_LABELS[n.selfDeclaredSection12]) })
-                          : t("No Section 12 declaration")}{" "}
-                        ·{" "}
-                        {t("Fee ceiling: {amount}", {
-                          amount: n.feeCeiling === null ? t("not stated") : formatINR(n.feeCeiling),
-                        })}
-                      </p>
-                      <div className="mt-3">
-                        {decision.route === "LEGAL_AID_REFERRAL" && (
-                          <Link to={`/referral/${n.id}`} className="btn btn--outline btn--sm">{t("View referral")}</Link>
-                        )}
-                        {decision.route === "PRO_BONO_ROTATION" && (
-                          <Link to={`/rotation/${n.id}`} className="btn btn--outline btn--sm">{t("My assigned advocate")}</Link>
-                        )}
-                        {decision.route === "PAID" && (
-                          <Link to={`/directory/${n.id}`} className="btn btn--outline btn--sm">{t("Directory")}</Link>
-                        )}
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
+              <h2 className="h-micro">{t("Look up a matter")}</h2>
+              <p className="small mt-3" style={{ maxWidth: 520 }}>
+                {t(
+                  "Enter the matter reference from your referral or allocation to see its live status. The platform stores metadata only — never case content.",
+                )}
+              </p>
+              <div className="availability-add mt-4">
+                <input
+                  className="field__input"
+                  value={matterId}
+                  onChange={(e) => setMatterId(e.target.value)}
+                  placeholder={t("Matter reference (UUID)")}
+                  aria-label={t("Matter reference")}
+                />
+                <Button size="sm" variant="ghost" onClick={() => void lookup()} disabled={!matterId.trim() || lookupBusy}>
+                  {lookupBusy ? t("Looking up…") : t("Look up")}
+                </Button>
+              </div>
+
+              {matterError && (
+                <p className="field__error mt-4" role="alert">
+                  {t(matterError)}
+                </p>
+              )}
+
+              {matter && (
+                <div className="privilege-card mt-5" role="status">
+                  <div className="flex-between">
+                    <p className="h-micro tabular">{matter.id}</p>
+                    <StatusLabel label={t(matter.status)} />
+                  </div>
+                  <table className="table table--dense mt-4">
+                    <tbody>
+                      <tr>
+                        <td className="small">{t("Category")}</td>
+                        <td className="small" style={{ textAlign: "right" }}>{t(CATEGORY_LABELS[matter.category])}</td>
+                      </tr>
+                      <tr>
+                        <td className="small">{t("Fee")}</td>
+                        <td className="small" style={{ textAlign: "right" }}>
+                          {matter.fee === null || matter.fee === 0 ? t("s.12 / pro bono — free") : formatINR(matter.fee)}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="small">{t("Opened")}</td>
+                        <td className="small tabular" style={{ textAlign: "right" }}>{formatDate(matter.openedAt)}</td>
+                      </tr>
+                      <tr>
+                        <td className="small">CNR</td>
+                        <td className="small tabular" style={{ textAlign: "right" }}>
+                          {matter.cnr ?? t("No CNR pointer yet")}
+                        </td>
+                      </tr>
+                      {matter.closeReason && (
+                        <tr>
+                          <td className="small">{t("Closed")}</td>
+                          <td className="small" style={{ textAlign: "right" }}>{t(`Closed: ${matter.closeReason}`)}</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                  {matter.status !== "CLOSED" && !closeState.done && (
+                    <Button size="sm" variant="ghost" className="mt-4" onClick={() => void close()} disabled={closeState.busy}>
+                      {closeState.busy ? t("Closing…") : t("Close this matter")}
+                    </Button>
+                  )}
+                  {closeState.done && (
+                    <p className="small mt-4" role="status">
+                      {t("Matter closed.")}
+                    </p>
+                  )}
+                  {closeState.error && <p className="field__error mt-3">{t(closeState.error)}</p>}
+                </div>
+              )}
             </div>
           </div>
 
           <div className="dash-col col-span-5">
             <div className="dash-section">
-              <h2 className="h-micro">{t("Matters")}</h2>
-              <ul className="grievance-list mt-4">
-                {data.matters.map((m) => (
-                  <li key={m.id} className="grievance-item">
-                    <div className="flex-between">
-                      <span className="small tabular">{m.id}</span>
-                      <StatusLabel label={t(m.status)} />
-                    </div>
-                    <p className="small mt-3">
-                      {t(CATEGORY_LABELS[m.category])} · {m.fee === null || m.fee === 0 ? t("s.12 / pro bono — free") : formatINR(m.fee)} ·{" "}
-                      {t("opened {date}", { date: formatDate(m.openedAt) })}
-                    </p>
-                    <p className="small mt-2" style={{ color: "var(--color-gray-light)" }}>
-                      {m.cnr ? `CNR ${m.cnr}` : t("No CNR pointer yet")} ·{" "}
-                      {m.closeReason ? t(`Closed: ${m.closeReason}`) : t("Open")}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-              <p className="small mt-4">
-                {t(
-                  "Matter status is shown through an authorized integration when available — otherwise an official link to the eCourts flow is provided."
-                )}
-              </p>
+              <h2 className="h-micro">{t("My needs")}</h2>
+              <div className="mt-4" role="status">
+                <StatusLabel label={t("HISTORY NOT EXPOSED")} />
+                <p className="small mt-3" style={{ maxWidth: 420 }}>
+                  {t(
+                    "This deployment does not expose a needs-history endpoint, so past needs are not listed here. Your need references from intake remain valid — keep them from the confirmation screen.",
+                  )}
+                </p>
+              </div>
             </div>
 
             <div className="dash-section">
@@ -126,6 +201,15 @@ export function CitizenPortal() {
                 <Link to="/start" className="btn btn--outline btn--sm">{t("Start a new need")}</Link>{" "}
                 <Link to="/grievance" className="btn btn--outline btn--sm">{t("File a grievance")}</Link>
               </div>
+            </div>
+
+            <div className="dash-section">
+              <h2 className="h-micro">{t("Case status")}</h2>
+              <p className="small mt-3">
+                {t(
+                  "Matter status is shown through an authorized integration when available — otherwise an official link to the eCourts flow is provided. The platform never scrapes or invents status.",
+                )}
+              </p>
             </div>
           </div>
         </div>

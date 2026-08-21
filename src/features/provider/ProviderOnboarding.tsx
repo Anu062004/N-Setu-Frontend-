@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "../../components/ui/Button";
 import { StatusLabel } from "../../components/ui/StatusLabel";
-import { api } from "../../lib/api";
+import { api, ApiError } from "../../lib/api";
 import {
   LEG_LABELS,
   REQUIRED_LEGS,
@@ -34,10 +34,10 @@ const DISTRICTS = districtsFor;
 const STATES_ = STATES;
 
 const PATHS: { value: CredentialPath; label: string; hint: string }[] = [
-  { value: "ISSUER_FETCH", label: "Issuer fetch (LIVE)", hint: "Authorized requester/issuer integration — can contribute to FULLY VERIFIED" },
-  { value: "AUTHORITY_LOOKUP", label: "Authority lookup (LIVE)", hint: "Current register lookup where available (enrolment / currency)" },
-  { value: "UPLOAD", label: "Upload document", hint: "Temporary processing, deleted after decision — DEMO ONLY" },
-  { value: "NOT_NOW", label: "Not now (OFF)", hint: "Caps the achievable tier" },
+  { value: "ISSUER_FETCH", label: "Issuer fetch", hint: "Authorized requester/issuer integration — can contribute to FULLY VERIFIED where the source is LIVE" },
+  { value: "AUTHORITY_LOOKUP", label: "Authority lookup", hint: "Current register lookup where available (enrolment / currency)" },
+  { value: "UPLOAD", label: "Upload document", hint: "Temporary processing, deleted after decision — can support DOCUMENT-VERIFIED, never FULLY VERIFIED alone" },
+  { value: "NOT_NOW", label: "Not now", hint: "Caps the achievable tier — an OFF source never becomes PASS" },
 ];
 
 const PROGRESS = ["Profile", "Practice", "Verification"];
@@ -57,6 +57,8 @@ export function ProviderOnboarding() {
   const [taxonomies, setTaxonomies] = useState<TaxCategory[]>(["TENANCY"]);
   const [submissions, setSubmissions] = useState<Partial<Record<CredentialLeg, CredentialPath>>>({});
   const [result, setResult] = useState<VerificationCaseResult | null>(null);
+  const [legOutcomes, setLegOutcomes] = useState<{ leg: CredentialLeg; code: string; message: string }[]>([]);
+  const [credentialRailOff, setCredentialRailOff] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -72,6 +74,8 @@ export function ProviderOnboarding() {
     if (!providerType) return;
     setSubmitting(true);
     setError(null);
+    setLegOutcomes([]);
+    setCredentialRailOff(false);
     try {
       const created = await api.createProvider({
         providerType,
@@ -85,14 +89,45 @@ export function ProviderOnboarding() {
         taxonomyCodes: taxonomies,
         proBonoAvailable: proBono,
       });
+      if (created.providerId) api.rememberProviderId(created.providerId);
+
       const legs = sortLegs(REQUIRED_LEGS[providerType]);
-      const result_ = await api.submitVerification(
-        created.providerId,
-        legs.map((leg) => ({ leg, path: submissions[leg] ?? "NOT_NOW" })),
-      );
-      setResult(result_);
+      const outcomes: { leg: CredentialLeg; code: string; message: string }[] = [];
+      for (const leg of legs) {
+        const path = submissions[leg];
+        if (path !== "ISSUER_FETCH" && path !== "UPLOAD") continue;
+        try {
+          if (path === "ISSUER_FETCH") await api.submitCredentialIssuerFetch(created.providerId, leg);
+          else await api.submitCredentialUpload(created.providerId, leg);
+        } catch (e) {
+          if (e instanceof ApiError) {
+            outcomes.push({ leg, code: e.code, message: e.message });
+            if (e.unavailable) setCredentialRailOff(true);
+          } else {
+            outcomes.push({ leg, code: "REQUEST_FAILED", message: "Submission failed" });
+          }
+        }
+      }
+      setLegOutcomes(outcomes);
+
+      const verification = await api.getVerification(created.providerId);
+      setResult({
+        caseId: created.providerId,
+        providerId: created.providerId,
+        tier: verification.tier,
+        decidedAt: verification.decidedAt,
+        checks: verification.checks,
+        requiredLegs: legs,
+        freshnessWindowDays: verification.freshnessWindowDays,
+      });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Onboarding failed");
+      setError(
+        e instanceof ApiError
+          ? `${e.code} — ${e.message}`
+          : e instanceof Error
+            ? e.message
+            : "Onboarding failed",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -107,6 +142,29 @@ export function ProviderOnboarding() {
           {result.tier === "DOCUMENT_VERIFIED" && t("Verification complete — DOCUMENT-VERIFIED.")}
           {result.tier === "SELF_DECLARED" && t("Profile created — SELF-DECLARED.")}
         </h1>
+        {credentialRailOff && (
+          <div className="assisted-banner mt-5" role="status">
+            <StatusLabel label={t("CREDENTIAL SOURCES OFF")} />
+            <span className="small">
+              {t(
+                "Credential verification sources are not configured in this deployment, so submitted legs could not be checked. Your tier honestly reflects this — no source was simulated.",
+              )}
+            </span>
+          </div>
+        )}
+        {legOutcomes.length > 0 && (
+          <ul className="mt-4 verification-reasons">
+            {legOutcomes.map((o) => (
+              <li key={o.leg} className="verification-reason">
+                <span className="h-micro">{t(LEG_LABELS[o.leg])}</span>
+                <StatusLabel label={t("UNAVAILABLE")} />
+                <span className="small">
+                  <code className="meta">{o.code}</code> — {t(o.message)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
         <ul className="mt-4 verification-reasons">
           {result.checks.map((c) => (
             <li key={c.checkType} className="verification-reason">
@@ -311,7 +369,7 @@ export function ProviderOnboarding() {
                 <div key={leg} className="credential-leg">
                   <div className="credential-leg__head">
                     <span className="h-micro">{t(LEG_LABELS[leg])}</span>
-                    <StatusLabel label={t(submissions[leg] === "NOT_NOW" || !submissions[leg] ? "OFF" : submissions[leg] === "UPLOAD" ? "DEMO ONLY" : "LIVE")} />
+                    <StatusLabel label={t(!submissions[leg] || submissions[leg] === "NOT_NOW" ? "OFF" : "PENDING")} />
                   </div>
                   <div className="path-grid">
                     {PATHS.map((p) => (

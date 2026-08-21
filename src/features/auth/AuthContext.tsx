@@ -1,13 +1,9 @@
 import { createContext, useContext, useMemo, useState } from "react";
+import { clearSession, readSession, writeSession, type StoredSession } from "../../lib/session";
 
 export type AuthRole = "CITIZEN" | "PROVIDER" | "OPERATOR" | "INSTITUTION";
 
-export interface AuthSession {
-  userId: string;
-  phone: string;
-  role: AuthRole;
-  token: string;
-}
+export interface AuthSession extends StoredSession {}
 
 interface AuthContextValue {
   session: AuthSession | null;
@@ -15,18 +11,7 @@ interface AuthContextValue {
   signOut: () => void;
 }
 
-const STORAGE_KEY = "nayasetu.auth";
-
 const AuthContext = createContext<AuthContextValue | null>(null);
-
-function readSession(): AuthSession | null {
-  try {
-    const raw = sessionStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as AuthSession) : null;
-  } catch {
-    return null;
-  }
-}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<AuthSession | null>(readSession);
@@ -35,11 +20,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     () => ({
       session,
       signIn: (s) => {
-        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(s));
+        writeSession(s);
         setSession(s);
       },
       signOut: () => {
-        sessionStorage.removeItem(STORAGE_KEY);
+        clearSession();
         setSession(null);
       },
     }),

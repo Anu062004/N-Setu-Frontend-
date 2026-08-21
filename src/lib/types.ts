@@ -251,3 +251,15 @@ export interface ProviderPaymentStatus {
   state: PaymentState;
   updatedAt: string;
 }
+
+export interface SlotsResponse {
+  availabilityPolicy: string;
+  slots: Slot[];
+}
+
+export interface RedemptionArtefact {
+  redemptionId: string;
+  type: string;
+  generatedAt: string;
+  note: string;
+}

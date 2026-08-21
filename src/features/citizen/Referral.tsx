@@ -15,10 +15,16 @@ export function Referral() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let alive = true;
     api
-      .getEligibility(needId)
-      .then((r) => setNeed(r.need))
-      .catch((e) => setError(e instanceof Error ? e.message : "Referral not found"));
+      .getReferral(needId)
+      .then((r) => {
+        if (alive) setNeed(r.need);
+      })
+      .catch((e) => alive && setError(e instanceof Error ? e.message : "Referral not found"));
+    return () => {
+      alive = false;
+    };
   }, [needId]);
 
   if (error) {

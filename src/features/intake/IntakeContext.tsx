@@ -1,5 +1,7 @@
 import { createContext, useContext, useMemo, useState } from "react";
-import type { Channel, NeedRequest, TaxCategory } from "../../lib/types";
+import type { Channel, EligibilityDecision, TaxCategory } from "../../lib/types";
+import { api } from "../../lib/api";
+import type { NeedRequest } from "../../lib/types";
 
 export interface IntakeState {
   step: number;
@@ -18,7 +20,10 @@ interface IntakeContextValue {
   state: IntakeState;
   setStep: (step: number) => void;
   setField: <K extends keyof IntakeState>(key: K, value: IntakeState[K]) => void;
-  submit: () => Promise<NeedRequest & { selfDeclaredSection12: string | null }>;
+  submit: () => Promise<{
+    need: NeedRequest & { selfDeclaredSection12: string | null };
+    decision: EligibilityDecision | null;
+  }>;
 }
 
 const IntakeContext = createContext<IntakeContextValue | null>(null);
@@ -43,19 +48,17 @@ export function IntakeProvider({ children }: { children: React.ReactNode }) {
       setStep: (step) => setState((s) => ({ ...s, step })),
       setField: (key, val) => setState((s) => ({ ...s, [key]: val })),
       submit: async () => {
-        const payload: NeedRequest = {
-          id: `req_${Math.random().toString(36).slice(2, 10)}`,
+        const { need, decision } = await api.createNeed({
           taxonomyCode: state.taxonomyCode ?? "OTHER",
           district: state.district || "Patna",
           language: state.language,
           modePref: state.modePref,
           feeCeiling: state.feeCeiling,
           urgency: state.urgency,
-        };
-        const need = { ...payload, selfDeclaredSection12: state.selfDeclaredSection12 };
-        await new Promise((r) => setTimeout(r, 400));
-        setState((s) => ({ ...s, needId: payload.id }));
-        return need;
+          selfDeclaredSection12: state.selfDeclaredSection12,
+        });
+        setState((s) => ({ ...s, needId: need.id }));
+        return { need, decision };
       },
     }),
     [state],

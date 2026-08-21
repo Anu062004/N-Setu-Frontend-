@@ -12,14 +12,18 @@ export function Directory() {
   const { needId = "req_9f2c1a" } = useParams();
   const { t } = useI18n();
   const [data, setData] = useState<DirectoryResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ code: string; message: string } | null>(null);
 
   useEffect(() => {
     let alive = true;
     api
       .getDirectory(needId)
       .then((d) => alive && setData(d))
-      .catch((e) => alive && setError(e.message));
+      .catch((e) => {
+        if (!alive) return;
+        const code = (e as { code?: string }).code ?? "ERROR";
+        setError({ code, message: e instanceof Error ? e.message : "Could not load the directory" });
+      });
     return () => {
       alive = false;
     };
@@ -29,7 +33,9 @@ export function Directory() {
     return (
       <div className="container-narrow mt-8">
         <StatusLabel label={t("ERROR")} />
-        <p className="mt-4">{t(error)}</p>
+        <p className="mt-4">
+          <code className="meta">{error.code}</code> — {t(error.message)}
+        </p>
       </div>
     );
   }
@@ -81,6 +87,21 @@ export function Directory() {
         </div>
 
         <ul className="directory-list">
+          {data.providers.length === 0 && (
+            <li className="grievance-item" role="status">
+              <StatusLabel label="NO MATCHES" />
+              <p className="small mt-3" style={{ maxWidth: 520 }}>
+                {t(
+                  "No verified professional matches this need yet in your district. Your need is saved — you can track it in your portal, or check the pro bono duty rotation.",
+                )}
+              </p>
+              <div className="mt-3">
+                <Link to={`/rotation/${needId}`} className="btn btn--outline btn--sm">
+                  {t("Try the duty rotation")}
+                </Link>
+              </div>
+            </li>
+          )}
           {data.providers.map((p) => (
             <li key={p.providerId} className="provider-row">
               <div className="provider-row__main">
@@ -106,7 +127,11 @@ export function Directory() {
                 <p className="small tabular">{p.nextSlot ? formatTime(p.nextSlot) : "—"}</p>
               </div>
               <div className="provider-row__action">
-                <Link to={`/providers/${p.providerId}?need=${needId}`} className="btn btn--outline btn--sm">
+                <Link
+                  to={`/providers/${p.providerId}?need=${needId}`}
+                  state={{ provider: p }}
+                  className="btn btn--outline btn--sm"
+                >
                   {t("View profile")}
                 </Link>
               </div>

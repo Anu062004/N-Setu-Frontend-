@@ -1,19 +1,41 @@
+import { useEffect, useState } from "react";
+import { api, ApiError } from "../../lib/api";
 import { StatusLabel } from "../../components/ui/StatusLabel";
 import { useI18n } from "../../lib/i18n";
 
-const FLAGS: [string, string][] = [
-  ["CREDENTIAL_DIGILOCKER_MODE", "OFF"],
-  ["CREDENTIAL_BAR_MODE", "LIVE"],
-  ["CREDENTIAL_AIBE_MODE", "LIVE"],
-  ["CASE_STATUS_MODE", "LINK_ONLY"],
-  ["PAYMENTS_MODE", "SANDBOX"],
-  ["IVR_MODE", "OFF"],
-  ["WHATSAPP_MODE", "MOCK"],
-  ["INSTITUTIONAL_EXPORT_MODE", "LOCAL"],
-];
+const FLAG_LABELS: Record<string, string> = {
+  credentialDigiLocker: "CREDENTIAL_DIGILOCKER_MODE",
+  credentialBar: "CREDENTIAL_BAR_MODE",
+  credentialAibe: "CREDENTIAL_AIBE_MODE",
+  caseStatus: "CASE_STATUS_MODE",
+  payments: "PAYMENTS_MODE",
+  ivr: "IVR_MODE",
+  whatsapp: "WHATSAPP_MODE",
+  institutionalExport: "INSTITUTIONAL_EXPORT_MODE",
+};
 
 export function Admin() {
   const { t } = useI18n();
+  const [capabilities, setCapabilities] = useState<Record<string, string> | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    api
+      .healthReady()
+      .then((h) => alive && setCapabilities(h.capabilities ?? {}))
+      .catch((e) =>
+        alive && setError(e instanceof ApiError ? `${e.code} — ${e.message}` : "Health check failed"),
+      );
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const rows: [string, string][] = capabilities
+    ? Object.entries(capabilities).map(([k, v]) => [FLAG_LABELS[k] ?? k, String(v)])
+    : [];
+
   return (
     <div className="admin">
       <div className="container">
@@ -21,9 +43,15 @@ export function Admin() {
         <h1 className="h-section">{t("Capability flags & audit")}</h1>
         <p className="small mt-3" style={{ maxWidth: 620 }}>
           {t(
-            "Every external adapter advertises LIVE, MOCK or OFF. There is no silent mock in production — the deployment manifest states each capability. A demo never visually represents a mock source as a government-confirmed result."
+            "Every external adapter advertises LIVE, MOCK or OFF. There is no silent mock in production — the deployment manifest states each capability. A demo never visually represents a mock source as a government-confirmed result.",
           )}
         </p>
+
+        {error && (
+          <p className="field__error mt-4" role="alert">
+            {t(error)}
+          </p>
+        )}
 
         <table className="table table--dense mt-6" style={{ maxWidth: 720 }}>
           <thead>
@@ -34,8 +62,16 @@ export function Admin() {
             </tr>
           </thead>
           <tbody>
-            {FLAGS.map(([flag, mode]) => {
-              const modeLabel = mode === "LIVE" ? "LIVE" : mode === "MOCK" ? "DEMO ONLY" : mode;
+            {!capabilities && (
+              <tr>
+                <td className="small" colSpan={3}>
+                  {error ? t("Live capability state unavailable — showing nothing rather than guessing.") : t("Reading live capability state…")}
+                </td>
+              </tr>
+            )}
+            {rows.map(([flag, mode]) => {
+              const modeLabel =
+                mode === "LIVE" ? "LIVE" : mode === "MOCK" ? "DEMO ONLY" : mode === "SANDBOX" ? "SANDBOX" : mode;
               return (
                 <tr key={flag}>
                   <td className="small tabular">{flag}</td>
@@ -43,11 +79,15 @@ export function Admin() {
                     <StatusLabel label={t(modeLabel)} />
                   </td>
                   <td className="small">
-                    {mode === "OFF" ? t("UI exposes limitation; workflow falls back to review") :
-                     mode === "MOCK" ? t("Synthetic fixture for demo; cannot produce FULLY VERIFIED") :
-                     mode === "LINK_ONLY" ? t("Returns official external continuation") :
-                     mode === "LOCAL" ? t("Signed local artefact; evidence, not official status") :
-                     t("Real authorized/public source")}
+                    {mode === "OFF"
+                      ? t("UI exposes limitation; workflow falls back to review")
+                      : mode === "MOCK"
+                        ? t("Synthetic fixture for demo; cannot produce FULLY VERIFIED")
+                        : mode === "LINK_ONLY"
+                          ? t("Returns official external continuation")
+                          : mode === "LOCAL"
+                            ? t("Signed local artefact; evidence, not official status")
+                            : t("Real authorized/public source")}
                   </td>
                 </tr>
               );

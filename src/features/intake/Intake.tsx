@@ -47,13 +47,15 @@ export function Intake() {
     setSubmitting(true);
     setError(null);
     try {
-      const need = await submit();
-      const decision = decideRoute({
-        selfDeclaredSection12: need.selfDeclaredSection12,
-        feeCeiling: need.feeCeiling,
-        districtFloor: floor,
-      });
-      setDone({ route: decision.route, reason: decision.reason });
+      const { need, decision } = await submit();
+      const route =
+        decision ??
+        decideRoute({
+          selfDeclaredSection12: need.selfDeclaredSection12,
+          feeCeiling: need.feeCeiling,
+          districtFloor: floor,
+        });
+      setDone({ route: route.route, reason: route.reason });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong. Try again.");
     } finally {
