@@ -25,6 +25,11 @@ export function RequireRole({ role, children }: { role: AuthRole; children: Reac
     return <Navigate to={`/auth?role=${role}&next=${encodeURIComponent(location.pathname)}`} replace />;
   }
 
+  // Unactivated account: nothing behind the guard is reachable until onboarding completes.
+  if (session.profileCompleted === false) {
+    return <Navigate to="/onboarding" replace />;
+  }
+
   if (session.role !== role) {
     return (
       <Navigate

@@ -4,15 +4,25 @@ import { clearSession, readSession, writeSession, type StoredSession } from "./s
  * Consumes the OAuth return fragment on app boot, before the router renders.
  *
  * The backend finishes the Google round-trip by redirecting to:
- *   {FRONTEND}#sessionToken=<token>&expiresAt=<ISO>&userId=<uuid>&accountCreated=true|false
+ *   {FRONTEND}#sessionToken=<token>&expiresAt=<ISO>&userId=<uuid>
+ *     &accountStatus=ACTIVE|PENDING_PROFILE&profileCompleted=true|false[&accountCreated=true]
  * A failed login may instead carry an error marker (e.g. #error=...) or no token.
  */
 export type BootAuthResult =
   | { kind: "none" }
-  | { kind: "authenticated"; accountCreated: boolean }
+  | { kind: "authenticated"; accountCreated: boolean; profileCompleted: boolean }
   | { kind: "failed"; reason: "expired" | "missing_token" };
 
-const OAUTH_KEYS = ["sessionToken", "expiresAt", "userId", "accountCreated", "error", "error_description"];
+const OAUTH_KEYS = [
+  "sessionToken",
+  "expiresAt",
+  "userId",
+  "accountCreated",
+  "accountStatus",
+  "profileCompleted",
+  "error",
+  "error_description",
+];
 
 export function consumeAuthHash(): BootAuthResult {
   if (!window.location.hash || window.location.hash.length < 2) return { kind: "none" };
@@ -28,6 +38,7 @@ export function consumeAuthHash(): BootAuthResult {
   const userId = params.get("userId") ?? "";
   const expiresAt = params.get("expiresAt") ?? undefined;
   const accountCreated = params.get("accountCreated") === "true";
+  const profileCompleted = params.get("profileCompleted") !== "false";
 
   if (!token) {
     clearSession();
@@ -50,7 +61,8 @@ export function consumeAuthHash(): BootAuthResult {
     providerId: existing?.providerId,
     token,
     expiresAt,
+    profileCompleted,
   };
   writeSession(session);
-  return { kind: "authenticated", accountCreated };
+  return { kind: "authenticated", accountCreated, profileCompleted };
 }

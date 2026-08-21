@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { clearSession, readSession, writeSession, type StoredSession } from "../../lib/session";
-import { UNAUTHORIZED_EVENT } from "../../lib/api";
+import { clearSession, readSession, updateSession, writeSession, type StoredSession } from "../../lib/session";
+import { api, PROFILE_PENDING_EVENT, UNAUTHORIZED_EVENT } from "../../lib/api";
 
 export type AuthRole = "CITIZEN" | "PROVIDER" | "OPERATOR" | "INSTITUTION";
 
@@ -21,7 +21,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const onUnauthorized = () => setSession(readSession());
     window.addEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
-    return () => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
+    // 403 ACCOUNT_PENDING_PROFILE: session stays valid; the guards reroute to onboarding.
+    const onProfilePending = () => setSession(readSession());
+    window.addEventListener(PROFILE_PENDING_EVENT, onProfilePending);
+    return () => {
+      window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
+      window.removeEventListener(PROFILE_PENDING_EVENT, onProfilePending);
+    };
+  }, []);
+
+  // Session restore: a stored unexpired token is re-verified against
+  // GET /v1/me/profile on every boot — profile state may have changed
+  // server-side since the fragment was consumed.
+  useEffect(() => {
+    if (!session) return;
+    let cancelled = false;
+    api
+      .getMyProfile()
+      .then(({ profileCompleted }) => {
+        if (cancelled || profileCompleted === session.profileCompleted) return;
+        setSession(updateSession({ profileCompleted }));
+      })
+      .catch(() => {
+        /* 401/403 already handled by the API client's global events. */
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const value = useMemo<AuthContextValue>(

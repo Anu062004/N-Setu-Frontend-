@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { PublicShell } from "./components/layout/PublicShell";
-import { AuthProvider } from "./features/auth/AuthContext";
+import { AuthProvider, useAuth } from "./features/auth/AuthContext";
 import { LanguageProvider, useI18n } from "./lib/i18n";
 import { RequireRole } from "./features/auth/RequireRole";
 import { consumeAuthHash } from "./lib/bootAuth";
@@ -16,9 +16,9 @@ import { ProviderDashboard } from "./features/provider/ProviderDashboard";
 import { ProviderOnboarding } from "./features/provider/ProviderOnboarding";
 import { ProviderVerificationPage } from "./features/provider/ProviderVerification";
 import { ProviderJoin } from "./features/provider/ProviderJoin";
-import { OtpSignIn } from "./features/auth/OtpSignIn";
-import { Welcome } from "./features/auth/Welcome";
-import { AssistedMode } from "./features/assisted/AssistedMode";
+import { SignIn } from "./features/auth/SignIn";
+import { Onboarding } from "./features/auth/Onboarding";
+import { Welcome } from "./features/auth/Welcome";import { AssistedMode } from "./features/assisted/AssistedMode";
 import { AssistedAudit } from "./features/assisted/AssistedAudit";
 import { Institutional } from "./features/institutional/Institutional";
 import { Admin } from "./features/admin/Admin";
@@ -31,8 +31,15 @@ import { CitizenPortal } from "./features/citizen/CitizenPortal";
 const BOOT_AUTH = consumeAuthHash();
 
 function BootAuthGate({ children }: { children: React.ReactNode }) {
-  if (BOOT_AUTH.kind === "authenticated" && BOOT_AUTH.accountCreated) {
-    return <Navigate to="/welcome" replace />;
+  if (BOOT_AUTH.kind === "authenticated") {
+    // New routing rule: an unactivated account never sees the app —
+    // onboarding IS the first-run experience.
+    if (!BOOT_AUTH.profileCompleted) {
+      return <Navigate to="/onboarding" replace />;
+    }
+    if (BOOT_AUTH.accountCreated) {
+      return <Navigate to="/welcome" replace />;
+    }
   }
   if (BOOT_AUTH.kind === "failed") {
     return <Navigate to="/auth?message=google_failed" replace />;
@@ -57,6 +64,15 @@ function IntakeRoute() {
       <Intake />
     </IntakeProvider>
   );
+}
+
+/** Onboarding is only for unactivated accounts; completed profiles go into the app. */
+function OnboardingRoute() {
+  const { session } = useAuth();
+  if (session?.profileCompleted === false) {
+    return <Onboarding session={session} />;
+  }
+  return <Navigate to="/start" replace />;
 }
 
 export default function App() {
@@ -126,8 +142,16 @@ export default function App() {
                 </RequireRole>
               }
             />
-            <Route path="/auth" element={<OtpSignIn />} />
+            <Route path="/auth" element={<SignIn />} />
             <Route path="/welcome" element={<Welcome />} />
+            <Route
+              path="/onboarding"
+              element={
+                <RequireRole role="CITIZEN">
+                  <OnboardingRoute />
+                </RequireRole>
+              }
+            />
             <Route
               path="/assist"
               element={

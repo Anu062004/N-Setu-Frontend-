@@ -8,6 +8,8 @@ export interface StoredSession {
   providerId?: string;
   /** ISO timestamp after which the session is invalid. */
   expiresAt?: string;
+  /** False until POST /v1/me/profile succeeds; gates the whole app. */
+  profileCompleted?: boolean;
 }
 
 const STORAGE_KEY = "nayasetu.auth";

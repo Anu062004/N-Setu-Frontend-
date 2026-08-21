@@ -44,6 +44,23 @@ export async function checkGoogleLoginAvailable(): Promise<boolean> {
 /** Fired when the backend rejects the stored token; AuthProvider listens and signs out. */
 export const UNAUTHORIZED_EVENT = "nayasetu:unauthorized";
 
+/**
+ * Fired on 403 ACCOUNT_PENDING_PROFILE: the session is valid but the account
+ * is not activated yet. AuthProvider flips profileCompleted=false and the
+ * guards route to onboarding — nothing is cleared.
+ */
+export const PROFILE_PENDING_EVENT = "nayasetu:profile-pending";
+
+export interface CitizenProfileInput {
+  fullName: string;
+  addressLine1: string;
+  addressLine2?: string;
+  city: string;
+  district: string;
+  state: string;
+  pincode: string;
+}
+
 /** Error codes the deployment advertises as fail-closed capabilities. */
 const UNAVAILABLE_CODES = new Set([
   "CAPABILITY_UNAVAILABLE",
@@ -113,6 +130,12 @@ async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
     if (status === 401 && code === "UNAUTHENTICATED") {
       clearSession();
       window.dispatchEvent(new CustomEvent(UNAUTHORIZED_EVENT));
+    }
+
+    // Valid session, unactivated account: keep everything, let guards reroute to onboarding.
+    if (status === 403 && code === "ACCOUNT_PENDING_PROFILE") {
+      updateSession({ profileCompleted: false });
+      window.dispatchEvent(new CustomEvent(PROFILE_PENDING_EVENT));
     }
 
     throw new ApiError(
@@ -270,6 +293,18 @@ export const api = {
       method: "POST",
       body: { phone, otp },
       public: true,
+    }),
+
+  /* ---------- citizen profile (onboarding gate) ---------- */
+  getMyProfile: () =>
+    request<unknown>("/v1/me/profile").then((raw) => {
+      const r = asRecord(raw);
+      return { profileCompleted: r.profileCompleted === true };
+    }),
+  updateMyProfile: (input: CitizenProfileInput) =>
+    request<unknown>("/v1/me/profile", { method: "POST", body: input }).then((raw) => {
+      const r = asRecord(raw);
+      return { profileCompleted: r.profileCompleted === true };
     }),
 
   /* ---------- delegation (OPERATOR) ---------- */
