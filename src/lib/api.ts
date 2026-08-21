@@ -168,7 +168,7 @@ function asRecord(v: unknown): Record<string, unknown> {
 function normaliseNeed(raw: unknown): NeedRequest & { selfDeclaredSection12: string | null } {
   const r = asRecord(raw);
   return {
-    id: String(r.id ?? r.needId ?? r.needRequestId ?? ""),
+    id: String(r.id ?? r.needId ?? r.needRequestId ?? r.requestId ?? ""),
     taxonomyCode: (r.taxonomyCode ?? r.category ?? "OTHER") as NeedRequest["taxonomyCode"],
     district: String(r.district ?? ""),
     language: String(r.language ?? ""),
