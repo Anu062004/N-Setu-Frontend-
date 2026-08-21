@@ -1,6 +1,7 @@
 import { createContext, useContext, useMemo, useState } from "react";
 import type { Channel, EligibilityDecision, TaxCategory } from "../../lib/types";
 import { api } from "../../lib/api";
+import { rememberNeed } from "../../lib/needHistory";
 import type { NeedRequest } from "../../lib/types";
 
 export interface IntakeState {
@@ -58,6 +59,12 @@ export function IntakeProvider({ children }: { children: React.ReactNode }) {
           selfDeclaredSection12: state.selfDeclaredSection12,
         });
         setState((s) => ({ ...s, needId: need.id }));
+        rememberNeed({
+          needId: need.id,
+          route: decision?.route ?? null,
+          taxonomyCode: need.taxonomyCode ?? state.taxonomyCode ?? "OTHER",
+          district: need.district || state.district || "",
+        });
         return { need, decision };
       },
     }),

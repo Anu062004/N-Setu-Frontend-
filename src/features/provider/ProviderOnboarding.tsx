@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
 import { StatusLabel } from "../../components/ui/StatusLabel";
 import { api, ApiError } from "../../lib/api";
@@ -64,6 +65,7 @@ export function ProviderOnboarding() {
   const [credentialRailOff, setCredentialRailOff] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [alreadyExists, setAlreadyExists] = useState(false);
 
   const toggle = <T,>(list: T[], v: T, set: (l: T[]) => void) =>
     set(list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
@@ -130,6 +132,12 @@ export function ProviderOnboarding() {
         freshnessWindowDays: verification.freshnessWindowDays,
       });
     } catch (e) {
+      // A Google account can hold both roles; a second join attempt means the
+      // provider profile already exists — route to the dashboard, not an error.
+      if (e instanceof ApiError && (e.code === "PROVIDER_ALREADY_EXISTS" || e.status === 409)) {
+        setAlreadyExists(true);
+        return;
+      }
       setError(
         e instanceof ApiError
           ? `${e.code} — ${e.message}`
@@ -141,6 +149,28 @@ export function ProviderOnboarding() {
       setSubmitting(false);
     }
   };
+
+  if (alreadyExists) {
+    return (
+      <div className="intake-result" role="status">
+        <StatusLabel label={t("PROFILE EXISTS")} />
+        <h1 className="h-section mt-4">{t("Your professional profile already exists.")}</h1>
+        <p className="lede mt-4" style={{ maxWidth: 560 }}>
+          {t(
+            "This account already has a provider profile, so there is nothing to create. Open your dashboard to manage services and verification.",
+          )}
+        </p>
+        <div className="intake-result__actions mt-6">
+          <Link to="/provider/dashboard" className="btn btn--primary">
+            {t("Open provider dashboard")}
+          </Link>
+          <Link to="/profile" className="btn btn--ghost">
+            {t("Back to your account")}
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (result) {
     return (

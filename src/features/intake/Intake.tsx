@@ -246,12 +246,11 @@ export function Intake() {
                   onChange={(e) => setField("modePref", e.target.value as Channel)}
                 >
                   <option value="APP">{t("On this app")}</option>
-                  <option value="ASSISTED">{t("Through a CSC / VLE operator (assisted)")}</option>
-                  <option value="IVR">{t("Toll-free phone (IVR)")}</option>
-                  <option value="WHATSAPP">WhatsApp</option>
+                  <option value="PHONE">{t("By phone call")}</option>
+                  <option value="VIDEO">{t("By video call")}</option>
                 </select>
                 <p className="field__hint">
-                  {t("Assisted mode: an operator opens a recorded, consented session and acts for you.")}
+                  {t("A preference only — the allocated professional confirms what is possible.")}
                 </p>
               </div>
             </div>

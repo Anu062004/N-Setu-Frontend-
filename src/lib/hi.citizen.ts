@@ -96,4 +96,20 @@ export const HI_CITIZEN: Record<string, string> = {
   "Industrial workman": "औद्योगिक कर्मकार",
   "In custody or jail": "हिरासत या जेल में",
   "Annual income below the prescribed limit": "वार्षिक आय निर्धारित सीमा से कम",
+
+  /* ---------- portal needs history ---------- */
+  "Your raised needs": "आपकी दर्ज की गई आवश्यकताएँ",
+  "No legal needs raised on this device yet. Start one and it will be listed here — with exactly one honest route attached.":
+    "इस डिवाइस पर अभी कोई कानूनी आवश्यकता दर्ज नहीं हुई है। एक शुरू करें — वह यहाँ सूचीबद्ध होगी, साथ में ठीक एक स्पष्ट मार्ग होगा।",
+  "Need": "आवश्यकता",
+  "—": "—",
+  "Open directory": "डायरेक्टरी खोलें",
+  "Open rotation": "रोटेशन खोलें",
+  "Open referral": "रेफ़रल खोलें",
+  "Route not recorded": "मार्ग दर्ज नहीं",
+  "Account": "खाता",
+  "Needs are listed from this device's local history — the platform stores engagement metadata only, never case content.":
+    "आवश्यकताएँ इस डिवाइस के स्थानीय इतिहास से सूचीबद्ध हैं — प्लेटफ़ॉर्म केवल जुड़ाव का मेटाडेटा रखता है, कभी भी मामले की सामग्री नहीं।",
+  "Your profile": "आपकी प्रोफ़ाइल",
+  "Look up a matter": "मामला खोजें",
 };

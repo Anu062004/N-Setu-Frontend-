@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { api, ApiError } from "../../lib/api";
 import type { MatterMetadata } from "../../lib/types";
 import { CATEGORY_LABELS } from "../../lib/eligibility";
+import { listNeeds, type NeedHistoryEntry } from "../../lib/needHistory";
 import { StatusLabel } from "../../components/ui/StatusLabel";
 import { Button } from "../../components/ui/Button";
 import { formatDate, formatINR } from "../../lib/format";
@@ -18,6 +19,7 @@ export function CitizenPortal() {
   const [matter, setMatter] = useState<MatterMetadata | null>(null);
   const [matterError, setMatterError] = useState<string | null>(null);
   const [lookupBusy, setLookupBusy] = useState(false);
+  const [needs] = useState<NeedHistoryEntry[]>(listNeeds);
   const [closeState, setCloseState] = useState<{ busy: boolean; done: boolean; error: string | null }>({
     busy: false,
     done: false,
@@ -105,6 +107,53 @@ export function CitizenPortal() {
         <div className="grid-12 mt-6">
           <div className="dash-col col-span-7">
             <div className="dash-section">
+              <h2 className="h-micro">{t("Your raised needs")}</h2>
+              {needs.length === 0 ? (
+                <p className="small mt-3" style={{ maxWidth: 520 }}>
+                  {t(
+                    "No legal needs raised on this device yet. Start one and it will be listed here — with exactly one honest route attached.",
+                  )}
+                </p>
+              ) : (
+                <ul className="mt-4" style={{ display: "grid", gap: "var(--sp-3)", listStyle: "none", padding: 0 }}>
+                  {needs.map((n) => (
+                    <li key={n.needId} className="privilege-card" style={{ padding: "var(--sp-4)" }}>
+                      <div className="flex-between">
+                        <span className="h-micro">{t(CATEGORY_LABELS[n.taxonomyCode] ?? n.taxonomyCode)}</span>
+                        <span className="small tabular">{formatDate(n.createdAt)}</span>
+                      </div>
+                      <p className="small mt-2 tabular">
+                        {t("Need")} {n.needId} · {n.district || t("—")}
+                      </p>
+                      <div className="mt-3 intake-result__actions">
+                        {n.route === "PAID" && (
+                          <Link to={`/directory/${n.needId}`} className="btn btn--outline btn--sm">
+                            {t("Open directory")}
+                          </Link>
+                        )}
+                        {n.route === "PRO_BONO_ROTATION" && (
+                          <Link to={`/rotation/${n.needId}`} className="btn btn--outline btn--sm">
+                            {t("Open rotation")}
+                          </Link>
+                        )}
+                        {n.route === "LEGAL_AID_REFERRAL" && (
+                          <Link to={`/referral/${n.needId}`} className="btn btn--outline btn--sm">
+                            {t("Open referral")}
+                          </Link>
+                        )}
+                        {!n.route && (
+                          <Link to={`/portal`} className="btn btn--ghost btn--sm" style={{ pointerEvents: "none", opacity: 0.6 }}>
+                            {t("Route not recorded")}
+                          </Link>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="dash-section mt-6">
               <h2 className="h-micro">{t("Look up a matter")}</h2>
               <p className="small mt-3" style={{ maxWidth: 520 }}>
                 {t(
@@ -184,14 +233,14 @@ export function CitizenPortal() {
 
           <div className="dash-col col-span-5">
             <div className="dash-section">
-              <h2 className="h-micro">{t("My needs")}</h2>
-              <div className="mt-4" role="status">
-                <StatusLabel label={t("HISTORY NOT EXPOSED")} />
-                <p className="small mt-3" style={{ maxWidth: 420 }}>
-                  {t(
-                    "This deployment does not expose a needs-history endpoint, so past needs are not listed here. Your need references from intake remain valid — keep them from the confirmation screen.",
-                  )}
-                </p>
+              <h2 className="h-micro">{t("Account")}</h2>
+              <p className="small mt-3" style={{ maxWidth: 420 }}>
+                {t(
+                  "Needs are listed from this device's local history — the platform stores engagement metadata only, never case content.",
+                )}
+              </p>
+              <div className="mt-4">
+                <Link to="/profile" className="btn btn--outline btn--sm">{t("Your profile")}</Link>
               </div>
             </div>
 

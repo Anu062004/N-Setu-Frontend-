@@ -97,7 +97,7 @@ export function ProviderDashboard() {
       <div className="container">
         <div className="flex-between">
           <div>
-            <p className="eyebrow">{t("Provider surface")} · {session?.phone}</p>
+            <p className="eyebrow">{t("Provider surface")} · {session?.userId.slice(0, 8)}</p>
             <h1 className="h-section">{t("Dashboard")}</h1>
           </div>
           <div className="flex-between" style={{ gap: "var(--sp-3)" }}>

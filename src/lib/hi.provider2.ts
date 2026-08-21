@@ -157,4 +157,12 @@ export const HI_PROVIDER2: Record<string, string> = {
     "आवश्यक जाँच विफल रही: {legs}। विरोधाभासी या न-मिला परिणाम सत्यापित नहीं किया जा सकता।",
   "Source unavailable for: {legs}. UNAVAILABLE never becomes PASS — the achievable tier is capped.":
     "इनके लिए स्रोत अनुपलब्ध: {legs}। UNAVAILABLE कभी PASS नहीं बनता — प्राप्त किया जा सकने वाला स्तर सीमित है।",
+
+  /* ---------- provider join: profile-exists state ---------- */
+  "PROFILE EXISTS": "प्रोफ़ाइल पहले से मौजूद है",
+  "Your professional profile already exists.": "आपकी पेशेवर प्रोफ़ाइल पहले से मौजूद है।",
+  "This account already has a provider profile, so there is nothing to create. Open your dashboard to manage services and verification.":
+    "इस खाते में प्रदाता प्रोफ़ाइल पहले से है, इसलिए बनाने को कुछ नहीं है। सेवाएँ और सत्यापन प्रबंधित करने के लिए अपना डैशबोर्ड खोलें।",
+  "Open provider dashboard": "प्रदाता डैशबोर्ड खोलें",
+  "Back to your account": "अपने खाते पर लौटें",
 };

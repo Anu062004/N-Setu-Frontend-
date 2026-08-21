@@ -20,7 +20,7 @@ export type TaxCategory =
 
 export type Route = "LEGAL_AID_REFERRAL" | "PRO_BONO_ROTATION" | "PAID";
 
-export type Channel = "APP" | "ASSISTED" | "IVR" | "WHATSAPP";
+export type Channel = "APP" | "PHONE" | "VIDEO";
 
 export type PaymentState =
   | "QUOTE_READY"

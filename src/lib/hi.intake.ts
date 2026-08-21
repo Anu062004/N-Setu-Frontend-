@@ -105,4 +105,10 @@ export const HI_INTAKE: Record<string, string> = {
     "आपकी शुल्क सीमा (₹{ceiling}) आपके जिले में इस श्रेणी के लिए {floor} की न्यूनतम सीमा से कम है। आपको प्रो बोनो ड्यूटी रोटेशन में भेजा जाता है — ड्यूटी पर मौजूद अगले अधिवक्ता से आपका मिलान किया जाता है।",
   "You are routed to the paid directory. Results are filtered by your needs and rotated fairly — you choose the professional. A transparent quote is shown before any work begins.":
     "आपको भुगतान निर्देशिका में भेजा जाता है। परिणाम आपकी आवश्यकताओं के अनुसार छाँटे जाते हैं और निष्पक्ष रूप से घुमाए जाते हैं — व्यवसायी का चुनाव आप करते हैं। कोई भी कार्य शुरू होने से पहले एक पारदर्शी कोटेशन दिखाया जाता है।",
+
+  /* ---------- consultation channel ---------- */
+  "By phone call": "फ़ोन कॉल द्वारा",
+  "By video call": "वीडियो कॉल द्वारा",
+  "A preference only — the allocated professional confirms what is possible.":
+    "केवल वरीयता — आवंटित पेशेवर ही बताएंगे कि क्या संभव है।",
 };
