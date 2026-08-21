@@ -375,6 +375,28 @@ export const api = {
       .then((raw) => normaliseMatter(raw, matterId)),
 
   /* ---------- identity & providers ---------- */
+
+  /**
+   * Self-service provider join for a signed-in CITIZEN: creates the provider
+   * profile, grants PROVIDER, seeds services — one atomic call (POST /v1/me/provider).
+   */
+  becomeProvider: (input: {
+    providerType: string;
+    displayName: string;
+    district: string;
+    state: string;
+    languages: string[];
+    serviceModes: string[];
+    services: { taxonomyCode: string; feeMin: number; feeMax: number; proBonoAvailable: boolean }[];
+  }) =>
+    request<unknown>("/v1/me/provider", { method: "POST", body: input }).then((raw) => {
+      const r = asRecord(raw);
+      return {
+        providerId: String(r.providerId ?? r.id ?? ""),
+        tier: (r.tier ?? "SELF_DECLARED") as "SELF_DECLARED",
+      };
+    }),
+  revokeSession: () => request<{ revoked: boolean }>("/v1/auth/session", { method: "DELETE" }),
   createProvider: (input: ProviderProfileInput) =>
     request<unknown>("/v1/providers", { method: "POST", body: input }).then((raw) => {
       const r = asRecord(raw);

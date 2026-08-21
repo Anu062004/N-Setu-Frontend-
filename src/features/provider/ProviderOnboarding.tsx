@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Button } from "../../components/ui/Button";
 import { StatusLabel } from "../../components/ui/StatusLabel";
 import { api, ApiError } from "../../lib/api";
+import { updateSession } from "../../lib/session";
+import { useAuth } from "../auth/AuthContext";
 import {
   LEG_LABELS,
   REQUIRED_LEGS,
@@ -44,6 +46,7 @@ const PROGRESS = ["Profile", "Practice", "Verification"];
 
 export function ProviderOnboarding() {
   const { t } = useI18n();
+  const { signIn } = useAuth();
   const [step, setStep] = useState(0);
   const [providerType, setProviderType] = useState<ProviderType | null>(null);
   const [displayName, setDisplayName] = useState("");
@@ -77,18 +80,24 @@ export function ProviderOnboarding() {
     setLegOutcomes([]);
     setCredentialRailOff(false);
     try {
-      const created = await api.createProvider({
+      const created = await api.becomeProvider({
         providerType,
         displayName: displayName.trim(),
         district,
         state,
         languages,
         serviceModes,
-        feeMin: Number(feeMin) || 0,
-        feeMax: Number(feeMax) || 0,
-        taxonomyCodes: taxonomies,
-        proBonoAvailable: proBono,
+        services: taxonomies.map((taxonomyCode) => ({
+          taxonomyCode,
+          feeMin: Number(feeMin) || 0,
+          feeMax: Number(feeMax) || 0,
+          proBonoAvailable: proBono,
+        })),
       });
+      // The backend granted PROVIDER in the same transaction — mirror it locally
+      // so route guards and the x-actor-role header reflect reality immediately.
+      const updated = updateSession({ role: "PROVIDER", providerId: created.providerId });
+      if (updated) signIn(updated);
       if (created.providerId) api.rememberProviderId(created.providerId);
 
       const legs = sortLegs(REQUIRED_LEGS[providerType]);

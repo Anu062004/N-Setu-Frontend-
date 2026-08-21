@@ -58,6 +58,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(s);
       },
       signOut: () => {
+        // Server-side revocation first (best effort) — the DB session row must
+        // not outlive the client that abandoned it.
+        void api.revokeSession().catch(() => {});
         clearSession();
         setSession(null);
       },

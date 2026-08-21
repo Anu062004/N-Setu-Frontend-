@@ -1,8 +1,10 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import { PublicShell } from "./components/layout/PublicShell";
 import { AuthProvider, useAuth } from "./features/auth/AuthContext";
 import { LanguageProvider, useI18n } from "./lib/i18n";
 import { RequireRole } from "./features/auth/RequireRole";
+import { isSessionExpired } from "./lib/session";
 import { consumeAuthHash } from "./lib/bootAuth";
 import { Landing } from "./features/landing/Landing";
 import { HowItWorks } from "./features/landing/HowItWorks";
@@ -30,20 +32,30 @@ import { CitizenPortal } from "./features/citizen/CitizenPortal";
 // token from the URL/history immediately.
 const BOOT_AUTH = consumeAuthHash();
 
+// One-shot latch: the boot redirect fires exactly once per page load. A static
+// decision must not fight later client-side navigation (e.g. after onboarding
+// completes and the user moves to /start, or any other route).
+let BOOT_AUTH_HANDLED = false;
+
 function BootAuthGate({ children }: { children: React.ReactNode }) {
-  if (BOOT_AUTH.kind === "authenticated") {
-    // New routing rule: an unactivated account never sees the app —
-    // onboarding IS the first-run experience.
-    if (!BOOT_AUTH.profileCompleted) {
-      return <Navigate to="/onboarding" replace />;
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (BOOT_AUTH_HANDLED || BOOT_AUTH.kind === "none") return;
+    BOOT_AUTH_HANDLED = true;
+    if (BOOT_AUTH.kind === "authenticated") {
+      // New routing rule: an unactivated account never sees the app —
+      // onboarding IS the first-run experience.
+      if (!BOOT_AUTH.profileCompleted) {
+        navigate("/onboarding", { replace: true });
+      } else if (BOOT_AUTH.accountCreated) {
+        navigate("/welcome", { replace: true });
+      }
+      return;
     }
-    if (BOOT_AUTH.accountCreated) {
-      return <Navigate to="/welcome" replace />;
-    }
-  }
-  if (BOOT_AUTH.kind === "failed") {
-    return <Navigate to="/auth?message=google_failed" replace />;
-  }
+    navigate("/auth?message=google_failed", { replace: true });
+  }, [navigate]);
+
   return <>{children}</>;
 }
 
@@ -73,6 +85,22 @@ function OnboardingRoute() {
     return <Onboarding session={session} />;
   }
   return <Navigate to="/start" replace />;
+}
+
+/**
+ * Provider onboarding accepts both CITIZENs (self-service join via
+ * POST /v1/me/provider) and existing PROVIDERs — unlike the rest of the
+ * provider surface, which stays PROVIDER-only.
+ */
+function ProviderOnboardingRoute() {
+  const { session } = useAuth();
+  if (!session || isSessionExpired(session)) {
+    return <Navigate to="/auth?role=PROVIDER&next=%2Fprovider%2Fonboarding" replace />;
+  }
+  if (session.profileCompleted === false) {
+    return <Navigate to="/onboarding" replace />;
+  }
+  return <ProviderOnboarding />;
 }
 
 export default function App() {
@@ -172,11 +200,7 @@ export default function App() {
             />
             <Route
               path="/provider/onboarding"
-              element={
-                <RequireRole role="PROVIDER">
-                  <ProviderOnboarding />
-                </RequireRole>
-              }
+              element={<ProviderOnboardingRoute />}
             />
             <Route
               path="/provider/verification"
