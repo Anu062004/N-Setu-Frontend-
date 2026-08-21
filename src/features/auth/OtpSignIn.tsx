@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
 import { StatusLabel } from "../../components/ui/StatusLabel";
-import { api, ApiError } from "../../lib/api";
+import { api, ApiError, GOOGLE_START_URL, checkGoogleLoginAvailable } from "../../lib/api";
 import { useAuth, type AuthRole } from "./AuthContext";
 import { useI18n } from "../../lib/i18n";
 
@@ -59,7 +59,24 @@ export function OtpSignIn() {
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
   const [otpUnavailable, setOtpUnavailable] = useState<string | null>(null);
+  const [googleUnavailable, setGoogleUnavailable] = useState(false);
+  const [googleStarting, setGoogleStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const googleFailed = message === "google_failed";
+
+  const handleGoogleSignIn = async () => {
+    setGoogleStarting(true);
+    setError(null);
+    const available = await checkGoogleLoginAvailable();
+    if (!available) {
+      setGoogleUnavailable(true);
+      setGoogleStarting(false);
+      return;
+    }
+    // Full-page navigation — the backend drives the consent + callback round-trip.
+    window.location.href = GOOGLE_START_URL;
+  };
 
   const handleRequest = async () => {
     if (phone.length < 10) return;
@@ -111,7 +128,38 @@ export function OtpSignIn() {
           <p className="small mt-3" style={{ maxWidth: 480 }}>
             {t("One account per person. The role you choose determines the surface you can use — a help-seeker is never shown the provider surface and vice versa.")}
           </p>
-          <div className="choice-grid mt-6">
+
+          {googleFailed && (
+            <div className="assisted-banner mt-5" role="alert">
+              <StatusLabel label={t("SIGN-IN FAILED")} />
+              <span className="small">
+                {t(
+                  "Google sign-in could not be completed. No session was created — please try again or use phone sign-in.",
+                )}
+              </span>
+            </div>
+          )}
+
+          {(!requestedRole || requestedRole === "CITIZEN") && (
+            <>
+              <div className="mt-6">
+                <Button block onClick={() => void handleGoogleSignIn()} disabled={googleStarting}>
+                  {googleStarting ? t("Redirecting to Google…") : t("Sign in with Google")}
+                </Button>
+                {googleUnavailable && (
+                  <p className="field__error mt-3" role="status">
+                    {t(
+                      "Login temporarily unavailable — the Google sign-in capability is not configured on the server right now (CAPABILITY_UNAVAILABLE). Please use phone sign-in or retry later.",
+                    )}
+                  </p>
+                )}
+              </div>
+              <p className="small mt-3" style={{ maxWidth: 480 }}>
+                {t("or continue with phone —")}
+              </p>
+            </>
+          )}
+          <div className="choice-grid mt-3">
             {ROLE_CARDS.map((c) => (
               <label
                 key={c.value}

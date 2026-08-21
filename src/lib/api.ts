@@ -18,7 +18,31 @@ import type {
 import { clearSession, readSession, updateSession } from "./session";
 
 export const API_BASE: string =
-  (import.meta.env.VITE_API_BASE as string | undefined)?.replace(/\/$/, "") || "/api";
+  (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ||
+  (import.meta.env.VITE_API_BASE as string | undefined)?.replace(/\/$/, "") ||
+  "/api";
+
+/** URL that begins the Google OAuth round-trip (full-page navigation, not fetch). */
+export const GOOGLE_START_URL = `${API_BASE}/v1/auth/google/start`;
+
+/**
+ * Pre-flight the Google start endpoint without navigating.
+ * A 302 arrives as an opaque redirect (status 0); a misconfigured deployment
+ * answers 503 CAPABILITY_UNAVAILABLE, which we can read and surface honestly.
+ */
+export async function checkGoogleLoginAvailable(): Promise<boolean> {
+  try {
+    const res = await fetch(GOOGLE_START_URL, { redirect: "manual" });
+    if (res.type === "opaqueredirect") return true;
+    return res.status !== 503;
+  } catch {
+    // Network-level failure — let the navigation attempt surface the real error.
+    return true;
+  }
+}
+
+/** Fired when the backend rejects the stored token; AuthProvider listens and signs out. */
+export const UNAUTHORIZED_EVENT = "nayasetu:unauthorized";
 
 /** Error codes the deployment advertises as fail-closed capabilities. */
 const UNAVAILABLE_CODES = new Set([
@@ -59,8 +83,11 @@ async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
   const headers: Record<string, string> = {};
   if (opts.body !== undefined) headers["Content-Type"] = "application/json";
   if (!opts.public) {
-    const token = readSession()?.token;
-    if (token) headers["Authorization"] = `Bearer ${token}`;
+    const session = readSession();
+    if (session?.token) {
+      headers["Authorization"] = `Bearer ${session.token}`;
+      headers["x-actor-role"] = session.role ?? "CITIZEN";
+    }
   }
 
   let res: Response;
@@ -79,10 +106,19 @@ async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
       | { error?: { code?: string; message?: string; requestId?: string }; code?: string; message?: string; statusCode?: number }
       | null;
     const err = raw?.error;
+    const status = res.status;
+    const code = err?.code ?? raw?.code ?? "REQUEST_FAILED";
+
+    // Expired/invalid token: drop the local session so route guards bounce to login.
+    if (status === 401 && code === "UNAUTHENTICATED") {
+      clearSession();
+      window.dispatchEvent(new CustomEvent(UNAUTHORIZED_EVENT));
+    }
+
     throw new ApiError(
-      res.status,
-      err?.code ?? raw?.code ?? "REQUEST_FAILED",
-      err?.message ?? raw?.message ?? `Request failed (${res.status})`,
+      status,
+      code,
+      err?.message ?? raw?.message ?? `Request failed (${status})`,
       err?.requestId ?? null,
     );
   }

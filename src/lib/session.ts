@@ -6,26 +6,41 @@ export interface StoredSession {
   role: AuthRole;
   token: string;
   providerId?: string;
+  /** ISO timestamp after which the session is invalid. */
+  expiresAt?: string;
 }
 
 const STORAGE_KEY = "nayasetu.auth";
 
+export function isSessionExpired(session: StoredSession | null): boolean {
+  if (!session?.expiresAt) return false;
+  const t = Date.parse(session.expiresAt);
+  return Number.isFinite(t) && t <= Date.now();
+}
+
 export function readSession(): StoredSession | null {
   try {
-    const raw = sessionStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEY) ?? sessionStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as StoredSession;
-    return parsed && typeof parsed.token === "string" && parsed.token ? parsed : null;
+    if (!parsed || typeof parsed.token !== "string" || !parsed.token) return null;
+    if (isSessionExpired(parsed)) {
+      clearSession();
+      return null;
+    }
+    return parsed;
   } catch {
     return null;
   }
 }
 
 export function writeSession(session: StoredSession): void {
-  sessionStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+  sessionStorage.removeItem(STORAGE_KEY);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
 }
 
 export function clearSession(): void {
+  localStorage.removeItem(STORAGE_KEY);
   sessionStorage.removeItem(STORAGE_KEY);
 }
 

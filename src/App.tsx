@@ -1,8 +1,9 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { PublicShell } from "./components/layout/PublicShell";
 import { AuthProvider } from "./features/auth/AuthContext";
 import { LanguageProvider, useI18n } from "./lib/i18n";
 import { RequireRole } from "./features/auth/RequireRole";
+import { consumeAuthHash } from "./lib/bootAuth";
 import { Landing } from "./features/landing/Landing";
 import { HowItWorks } from "./features/landing/HowItWorks";
 import { Rights } from "./features/landing/Rights";
@@ -16,6 +17,7 @@ import { ProviderOnboarding } from "./features/provider/ProviderOnboarding";
 import { ProviderVerificationPage } from "./features/provider/ProviderVerification";
 import { ProviderJoin } from "./features/provider/ProviderJoin";
 import { OtpSignIn } from "./features/auth/OtpSignIn";
+import { Welcome } from "./features/auth/Welcome";
 import { AssistedMode } from "./features/assisted/AssistedMode";
 import { AssistedAudit } from "./features/assisted/AssistedAudit";
 import { Institutional } from "./features/institutional/Institutional";
@@ -23,6 +25,20 @@ import { Admin } from "./features/admin/Admin";
 import { Referral } from "./features/citizen/Referral";
 import { Grievance } from "./features/citizen/Grievance";
 import { CitizenPortal } from "./features/citizen/CitizenPortal";
+
+// Runs before the router renders: persists the OAuth session and strips the
+// token from the URL/history immediately.
+const BOOT_AUTH = consumeAuthHash();
+
+function BootAuthGate({ children }: { children: React.ReactNode }) {
+  if (BOOT_AUTH.kind === "authenticated" && BOOT_AUTH.accountCreated) {
+    return <Navigate to="/welcome" replace />;
+  }
+  if (BOOT_AUTH.kind === "failed") {
+    return <Navigate to="/auth?message=google_failed" replace />;
+  }
+  return <>{children}</>;
+}
 
 function SimplePage({ eyebrow, title, body }: { eyebrow: string; title: string; body: string }) {
   const { t } = useI18n();
@@ -48,19 +64,70 @@ export default function App() {
     <LanguageProvider>
       <AuthProvider>
         <BrowserRouter>
+        <BootAuthGate>
         <Routes>
           <Route element={<PublicShell />}>
             <Route path="/" element={<Landing />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/rights" element={<Rights />} />
-            <Route path="/start" element={<IntakeRoute />} />
-            <Route path="/directory/:needId" element={<Directory />} />
-            <Route path="/rotation/:needId" element={<Rotation />} />
-            <Route path="/providers/:providerId" element={<ProviderProfile />} />
-            <Route path="/referral/:needId" element={<Referral />} />
-            <Route path="/portal" element={<CitizenPortal />} />
-            <Route path="/grievance" element={<Grievance />} />
+            <Route
+              path="/start"
+              element={
+                <RequireRole role="CITIZEN">
+                  <IntakeRoute />
+                </RequireRole>
+              }
+            />
+            <Route
+              path="/directory/:needId"
+              element={
+                <RequireRole role="CITIZEN">
+                  <Directory />
+                </RequireRole>
+              }
+            />
+            <Route
+              path="/rotation/:needId"
+              element={
+                <RequireRole role="CITIZEN">
+                  <Rotation />
+                </RequireRole>
+              }
+            />
+            <Route
+              path="/providers/:providerId"
+              element={
+                <RequireRole role="CITIZEN">
+                  <ProviderProfile />
+                </RequireRole>
+              }
+            />
+            <Route
+              path="/referral/:needId"
+              element={
+                <RequireRole role="CITIZEN">
+                  <Referral />
+                </RequireRole>
+              }
+            />
+            <Route
+              path="/portal"
+              element={
+                <RequireRole role="CITIZEN">
+                  <CitizenPortal />
+                </RequireRole>
+              }
+            />
+            <Route
+              path="/grievance"
+              element={
+                <RequireRole role="CITIZEN">
+                  <Grievance />
+                </RequireRole>
+              }
+            />
             <Route path="/auth" element={<OtpSignIn />} />
+            <Route path="/welcome" element={<Welcome />} />
             <Route
               path="/assist"
               element={
@@ -103,6 +170,7 @@ export default function App() {
             />
           </Route>
         </Routes>
+        </BootAuthGate>
         </BrowserRouter>
       </AuthProvider>
     </LanguageProvider>

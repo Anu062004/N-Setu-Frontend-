@@ -1,5 +1,6 @@
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { clearSession, readSession, writeSession, type StoredSession } from "../../lib/session";
+import { UNAUTHORIZED_EVENT } from "../../lib/api";
 
 export type AuthRole = "CITIZEN" | "PROVIDER" | "OPERATOR" | "INSTITUTION";
 
@@ -15,6 +16,13 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<AuthSession | null>(readSession);
+
+  // The API client clears storage on 401 UNAUTHENTICATED — mirror that in React state.
+  useEffect(() => {
+    const onUnauthorized = () => setSession(readSession());
+    window.addEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
+    return () => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
+  }, []);
 
   const value = useMemo<AuthContextValue>(
     () => ({
