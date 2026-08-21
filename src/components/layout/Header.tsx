@@ -55,6 +55,9 @@ export function Header() {
           {session ? (
             <>
               <span className="header-meta">{t(session.role.toLowerCase().replace("_", " "))}</span>
+              <Link to="/profile" className="header-link">
+                {t("Profile")}
+              </Link>
               <button className="header-link" onClick={handleSignOut}>{t("Sign out")}</button>
             </>
           ) : (

@@ -51,7 +51,7 @@ export const UNAUTHORIZED_EVENT = "nayasetu:unauthorized";
  */
 export const PROFILE_PENDING_EVENT = "nayasetu:profile-pending";
 
-export interface CitizenProfileInput {
+export interface CitizenProfile {
   fullName: string;
   addressLine1: string;
   addressLine2?: string;
@@ -59,6 +59,13 @@ export interface CitizenProfileInput {
   district: string;
   state: string;
   pincode: string;
+}
+
+export interface ProviderServiceInput {
+  taxonomyCode: string;
+  feeMin: number;
+  feeMax: number;
+  proBonoAvailable: boolean;
 }
 
 /** Error codes the deployment advertises as fail-closed capabilities. */
@@ -299,12 +306,48 @@ export const api = {
   getMyProfile: () =>
     request<unknown>("/v1/me/profile").then((raw) => {
       const r = asRecord(raw);
-      return { profileCompleted: r.profileCompleted === true };
+      const p = asRecord(r.profile);
+      return {
+        profileCompleted: r.profileCompleted === true,
+        profile:
+          r.profileCompleted === true && Object.keys(p).length > 0
+            ? {
+                fullName: String(p.fullName ?? ""),
+                addressLine1: String(p.addressLine1 ?? ""),
+                addressLine2: p.addressLine2 == null ? undefined : String(p.addressLine2),
+                city: String(p.city ?? ""),
+                district: String(p.district ?? ""),
+                state: String(p.state ?? ""),
+                pincode: String(p.pincode ?? ""),
+              }
+            : undefined,
+      };
     }),
-  updateMyProfile: (input: CitizenProfileInput) =>
+  updateMyProfile: (input: CitizenProfile) =>
     request<unknown>("/v1/me/profile", { method: "POST", body: input }).then((raw) => {
       const r = asRecord(raw);
       return { profileCompleted: r.profileCompleted === true };
+    }),
+
+  /* ---------- me: identity, roles & provider services ---------- */
+  getMe: () =>
+    request<unknown>("/v1/me").then((raw) => {
+      const r = asRecord(raw);
+      const roles = Array.isArray(r.roles) ? (r.roles as string[]) : [];
+      return {
+        userId: String(r.userId ?? ""),
+        accountStatus: r.accountStatus == null ? undefined : String(r.accountStatus),
+        profileCompleted: r.profileCompleted === true,
+        roles: roles.filter((x): x is "CITIZEN" | "PROVIDER" | "OPERATOR" | "INSTITUTION" | "ADMIN" =>
+          ["CITIZEN", "PROVIDER", "OPERATOR", "INSTITUTION", "ADMIN"].includes(x),
+        ),
+        providerId: r.providerId == null ? undefined : String(r.providerId),
+      };
+    }),
+  addProviderServices: (providerId: string, services: ProviderServiceInput[]) =>
+    request<{ added: number }>(`/v1/providers/${providerId}/services`, {
+      method: "POST",
+      body: { services },
     }),
 
   /* ---------- delegation (OPERATOR) ---------- */

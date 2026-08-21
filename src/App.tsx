@@ -20,7 +20,10 @@ import { ProviderVerificationPage } from "./features/provider/ProviderVerificati
 import { ProviderJoin } from "./features/provider/ProviderJoin";
 import { SignIn } from "./features/auth/SignIn";
 import { Onboarding } from "./features/auth/Onboarding";
-import { Welcome } from "./features/auth/Welcome";import { AssistedMode } from "./features/assisted/AssistedMode";
+import { Welcome } from "./features/auth/Welcome";
+import { AccountOverview } from "./features/account/AccountOverview";
+import { CitizenProfileEdit } from "./features/account/CitizenProfileEdit";
+import { ProviderServicesEdit } from "./features/account/ProviderServicesEdit";import { AssistedMode } from "./features/assisted/AssistedMode";
 import { AssistedAudit } from "./features/assisted/AssistedAudit";
 import { Institutional } from "./features/institutional/Institutional";
 import { Admin } from "./features/admin/Admin";
@@ -172,6 +175,30 @@ export default function App() {
             />
             <Route path="/auth" element={<SignIn />} />
             <Route path="/welcome" element={<Welcome />} />
+            <Route
+              path="/profile"
+              element={
+                <RequireRole role="CITIZEN">
+                  <AccountOverview />
+                </RequireRole>
+              }
+            />
+            <Route
+              path="/profile/citizen"
+              element={
+                <RequireRole role="CITIZEN">
+                  <CitizenProfileEdit />
+                </RequireRole>
+              }
+            />
+            <Route
+              path="/profile/provider"
+              element={
+                <RequireRole role="CITIZEN">
+                  <ProviderServicesEdit />
+                </RequireRole>
+              }
+            />
             <Route
               path="/onboarding"
               element={

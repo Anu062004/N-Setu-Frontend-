@@ -50,6 +50,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  // Reconcile roles/providerId — the stored session can go stale when roles
+  // are granted on another device or providerId is unknown after re-login.
+  useEffect(() => {
+    if (!session) return;
+    let cancelled = false;
+    api
+      .getMe()
+      .then((me) => {
+        if (cancelled) return;
+        const nextRole =
+          session.role && me.roles.includes(session.role)
+            ? session.role
+            : me.roles.find((r) => r !== "ADMIN") ?? session.role;
+        const patch = {
+          role: nextRole,
+          providerId: me.providerId,
+          profileCompleted: me.profileCompleted,
+        };
+        const changed =
+          patch.role !== session.role ||
+          patch.providerId !== session.providerId ||
+          patch.profileCompleted !== session.profileCompleted;
+        if (changed) setSession(updateSession(patch) ?? session);
+      })
+      .catch(() => {
+        /* 401 handled by UNAUTHORIZED_EVENT; treat other failures as stale-but-usable. */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       session,
