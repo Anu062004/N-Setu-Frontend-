@@ -17,6 +17,8 @@ interface FormState {
   pincode: string;
 }
 
+type GeoStatus = "idle" | "loading" | "success" | "error";
+
 const EMPTY: FormState = {
   fullName: "",
   addressLine1: "",
@@ -40,6 +42,39 @@ function validate(form: FormState): Partial<Record<keyof FormState, string>> {
   return errors;
 }
 
+/**
+ * Reverse-geocode device coordinates into Indian address parts.
+ * One user-triggered request per click against OpenStreetMap Nominatim
+ * (public, keyless); anything unusable comes back undefined and the
+ * citizen types it themselves. Nothing is stored beyond the form.
+ */
+async function reverseGeocode(lat: number, lon: number): Promise<FormState> {
+  const url =
+    `https://nominatim.openstreetmap.org/reverse?lat=${encodeURIComponent(String(lat))}` +
+    `&lon=${encodeURIComponent(String(lon))}&format=jsonv2&addressdetails=1&zoom=14&accept-language=en`;
+  const res = await fetch(url, { headers: { Accept: "application/json" } });
+  if (!res.ok) throw new Error("GEOCODE_FAILED");
+  const data = (await res.json()) as { address?: Record<string, unknown> };
+  const a = data?.address ?? {};
+  const str = (k: string[]) => {
+    for (const key of k) {
+      const v = a[key];
+      if (typeof v === "string" && v.trim()) return v.trim();
+    }
+    return "";
+  };
+  const postcode = typeof a.postcode === "string" && /^\d{6}$/.test(a.postcode.trim()) ? a.postcode.trim() : "";
+  return {
+    fullName: "",
+    addressLine1: "",
+    addressLine2: "",
+    city: str(["city", "town", "village", "municipality"]),
+    district: str(["state_district", "county"]) || str(["city", "town", "village"]),
+    state: str(["state"]),
+    pincode: postcode,
+  };
+}
+
 export function Onboarding({ session }: { session: StoredSession }) {
   const { t } = useI18n();
   const navigate = useNavigate();
@@ -48,10 +83,63 @@ export function Onboarding({ session }: { session: StoredSession }) {
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [geoStatus, setGeoStatus] = useState<GeoStatus>("idle");
+  const [geoMessage, setGeoMessage] = useState<string | null>(null);
 
   const setField = (key: keyof FormState, value: string) => {
     setForm((f) => ({ ...f, [key]: value }));
     setErrors((e) => ({ ...e, [key]: undefined }));
+  };
+
+  const handleDetectLocation = () => {
+    if (!("geolocation" in navigator)) {
+      setGeoStatus("error");
+      setGeoMessage(t("Location services are not available on this device."));
+      return;
+    }
+    setGeoStatus("loading");
+    setGeoMessage(null);
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        try {
+          const detected = await reverseGeocode(coords.latitude, coords.longitude);
+          const usable = Boolean(detected.city || detected.district || detected.state);
+          if (!usable) {
+            setGeoStatus("error");
+            setGeoMessage(t("Could not determine your area from your location. Please enter it manually."));
+            return;
+          }
+          // Suggest only into EMPTY fields — never overwrite what the citizen typed.
+          setForm((f) => ({
+            ...f,
+            city: f.city.trim() || detected.city,
+            district: f.district.trim() || detected.district,
+            state: f.state.trim() || detected.state,
+            pincode: f.pincode.trim() || detected.pincode,
+          }));
+          setErrors((e) => ({
+            ...e,
+            ...(detected.city ? { city: undefined } : {}),
+            ...(detected.district ? { district: undefined } : {}),
+            ...(detected.state ? { state: undefined } : {}),
+            ...(detected.pincode ? { pincode: undefined } : {}),
+          }));
+          setGeoStatus("success");
+        } catch {
+          setGeoStatus("error");
+          setGeoMessage(t("Could not determine your area from your location. Please enter it manually."));
+        }
+      },
+      (err) => {
+        setGeoStatus("error");
+        setGeoMessage(
+          err.code === err.PERMISSION_DENIED
+            ? t("Location permission was denied. Please enter your details manually.")
+            : t("Could not read your device location. Please enter your details manually."),
+        );
+      },
+      { enableHighAccuracy: false, timeout: 12000, maximumAge: 300000 },
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -76,16 +164,7 @@ export function Onboarding({ session }: { session: StoredSession }) {
       if (updated) signIn(updated);
       navigate("/start");
     } catch (err) {
-      if (err instanceof ApiError) {
-        if (err.code === "VALIDATION_ERROR") {
-          // The server owns the authoritative field rules; surface its message inline.
-          setServerError(err.message);
-        } else {
-          setServerError(err.message);
-        }
-      } else {
-        setServerError("Something went wrong. Please try again.");
-      }
+      setServerError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -136,6 +215,43 @@ export function Onboarding({ session }: { session: StoredSession }) {
             autoComplete="address-line2"
           />
         </div>
+
+        <button
+          type="button"
+          className="btn btn--ghost mt-5"
+          onClick={handleDetectLocation}
+          disabled={geoStatus === "loading"}
+        >
+          {geoStatus === "loading"
+            ? t("Detecting your location…")
+            : geoStatus === "success"
+              ? t("Use location again")
+              : t("Use current location")}
+        </button>
+        <p className="small mt-2" style={{ maxWidth: 560 }}>
+          {t(
+            "Fills city, district, state and PIN from your device location — used once, never stored. Every field stays editable.",
+          )}
+        </p>
+
+        {geoStatus === "loading" && (
+          <p className="small mt-3" role="status">
+            {t("Detecting your location…")}
+          </p>
+        )}
+        {geoStatus === "success" && (
+          <div className="assisted-banner mt-3" role="status">
+            <StatusLabel label={t("AREA FILLED")} />
+            <span className="small">
+              {t("Please verify the suggested details and complete your street address.")}
+            </span>
+          </div>
+        )}
+        {geoStatus === "error" && (
+          <p className="field__error mt-3" role="alert">
+            {geoMessage ?? t("Could not read your device location. Please enter your details manually.")}
+          </p>
+        )}
 
         <div className="mt-5" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--sp-4)" }}>
           <div className="field">

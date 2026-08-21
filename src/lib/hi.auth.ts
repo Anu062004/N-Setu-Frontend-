@@ -93,4 +93,21 @@ export const HI_AUTH: Record<string, string> = {
   LIVE: "लाइव",
   "ASSISTED SESSION": "सहायता सत्र",
   "SESSION sess_0938": "सत्र sess_0938",
+
+  /* ---------- onboarding: current-location helper ---------- */
+  "Use current location": "वर्तमान स्थान का उपयोग करें",
+  "Use location again": "स्थान फिर से प्राप्त करें",
+  "Detecting your location…": "आपका स्थान पता लगाया जा रहा है…",
+  "AREA FILLED": "क्षेत्र भर दिया गया",
+  "Please verify the suggested details and complete your street address.":
+    "कृपया सुझाए गए विवरण जाँचें और अपना गली/मोहल्ला पूरा करें।",
+  "Fills city, district, state and PIN from your device location — used once, never stored. Every field stays editable.":
+    "आपके डिवाइस के स्थान से शहर, ज़िला, राज्य और PIN भरता है — एक बार उपयोग होता है, कभी संग्रहीत नहीं। हर फ़ील्ड संपादन योग्य रहता है।",
+  "Location services are not available on this device.": "इस डिवाइस पर स्थान सेवा उपलब्ध नहीं है।",
+  "Location permission was denied. Please enter your details manually.":
+    "स्थान की अनुमति नहीं मिली। कृपया विवरण स्वयं भरें।",
+  "Could not read your device location. Please enter your details manually.":
+    "डिवाइस का स्थान नहीं पढ़ा जा सका। कृपया विवरण स्वयं भरें।",
+  "Could not determine your area from your location. Please enter it manually.":
+    "आपके स्थान से क्षेत्र नहीं पता चल सका। कृपया इसे स्वयं भरें।",
 };
