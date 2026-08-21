@@ -26,7 +26,9 @@ export function RequireRole({ role, children }: { role: AuthRole; children: Reac
   }
 
   // Unactivated account: nothing behind the guard is reachable until onboarding completes.
-  if (session.profileCompleted === false) {
+  // /onboarding itself must stay reachable — otherwise pending users loop here forever.
+  const onOnboardingPath = location.pathname === "/onboarding";
+  if (session.profileCompleted === false && !onOnboardingPath) {
     return <Navigate to="/onboarding" replace />;
   }
 
